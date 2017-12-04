@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="头文件">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
@@ -13,42 +9,63 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="redis_ae">
+      <UniqueIdentifier>{765332c1-0daf-4ec4-b9b7-289868114e07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="easylog">
+      <UniqueIdentifier>{29e0c256-87be-4aa4-92af-5aff9c7f1445}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uuid">
+      <UniqueIdentifier>{0fddf117-0fdb-4a41-8952-e51ed994b7ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\easylog\easylogging++.cc">
+      <Filter>easylog</Filter>
+    </ClCompile>
+    <ClCompile Include="include\uuid\uuid4.c">
+      <Filter>uuid</Filter>
+    </ClCompile>
+    <ClCompile Include="include\redis_ae\adlist.c">
+      <Filter>redis_ae</Filter>
+    </ClCompile>
+    <ClCompile Include="include\redis_ae\ae.c">
+      <Filter>redis_ae</Filter>
+    </ClCompile>
+    <ClCompile Include="include\redis_ae\zmalloc.c">
+      <Filter>redis_ae</Filter>
+    </ClCompile>
+    <ClCompile Include="common_tool.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Redis_Utils.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RedisRPC.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\easylog\easylogging++.h">
+      <Filter>easylog</Filter>
+    </ClInclude>
+    <ClInclude Include="include\uuid\uuid4.h">
+      <Filter>uuid</Filter>
+    </ClInclude>
+    <ClInclude Include="include\redis_ae\ae.h">
+      <Filter>redis_ae</Filter>
+    </ClInclude>
     <ClInclude Include="common_tool.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Redis_Utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="RedisRPC.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ae.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="common_tool.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Redis_Utils.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="adlist.c">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ae.c">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="zmalloc.c">
-      <Filter>头文件</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

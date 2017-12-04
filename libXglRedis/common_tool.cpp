@@ -1,4 +1,14 @@
 #include "common_tool.h"
+std::string time2str ( time_t time )
+{
+	tm* local;
+	char time_str[ 128 ];
+
+	local = localtime ( &time );
+	memset ( time_str , 0 , 128 );
+	strftime ( time_str , 64 , "%Y-%m-%d %H:%M:%S" , local );
+	return time_str;
+}
 
 template<class T>
 std::string num2str ( const T num )
@@ -217,4 +227,14 @@ bool keyMatch(const std::string srcStr, const std::string & strPattern)
 
 	}
 	return false;
+}
+
+std::string generate_uuid()
+{
+	char buf[UUID4_LEN];
+	uuid4_generate(buf);
+	
+	string uuidStr = std::string(buf);
+	uuidStr.erase(remove(uuidStr.begin(), uuidStr.end(), '-'), uuidStr.end());
+	return uuidStr;
 }

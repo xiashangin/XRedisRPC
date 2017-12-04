@@ -94,6 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\hiredis\deps;C:\hiredis\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/D _CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -146,18 +147,22 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ae.h" />
-    <ClInclude Include="common_tool.h" />
-    <ClInclude Include="Redis_Utils.h" />
-    <ClInclude Include="stdafx.h" />
+    <ClCompile Include="common_tool.cpp" />
+    <ClCompile Include="include\easylog\easylogging++.cc" />
+    <ClCompile Include="include\redis_ae\adlist.c" />
+    <ClCompile Include="include\redis_ae\ae.c" />
+    <ClCompile Include="include\redis_ae\zmalloc.c" />
+    <ClCompile Include="include\uuid\uuid4.c" />
+    <ClCompile Include="RedisRPC.cpp" />
+    <ClCompile Include="Redis_Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="adlist.c" />
-    <ClCompile Include="ae.c" />
-    <ClCompile Include="common_tool.cpp" />
-    <ClCompile Include="Redis_Utils.cpp" />
-    <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="zmalloc.c" />
+    <ClInclude Include="common_tool.h" />
+    <ClInclude Include="include\easylog\easylogging++.h" />
+    <ClInclude Include="include\redis_ae\ae.h" />
+    <ClInclude Include="include\uuid\uuid4.h" />
+    <ClInclude Include="RedisRPC.h" />
+    <ClInclude Include="Redis_Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
