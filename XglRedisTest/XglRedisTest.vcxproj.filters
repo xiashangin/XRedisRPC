@@ -18,20 +18,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="common_tool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Redis_Utils.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="XglRedisTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
