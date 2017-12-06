@@ -108,6 +108,12 @@ void* CRedis_Utils::thAsyncSubsAll(void *arg)
 
 int CRedis_Utils::get(const char* _key, char* sRlt)
 {
+	if (sRlt == nullptr)
+	{
+		ERRORLOG << "char* sRlt pointed to null";
+		return -1;
+	}
+
 	if (!is_connected)
 	{
 		DEBUGLOG << "redis 服务尚未连接... ip = " << ip 
@@ -151,6 +157,11 @@ int CRedis_Utils::get(const char* _key, char* sRlt)
 
 bool CRedis_Utils::set(const char* _key, const char* _value, char *sRlt)
 {
+	if (sRlt == nullptr)
+	{
+		ERRORLOG << "char* sRlt pointed to null";
+		return false;
+	}
 	if (!is_connected)
 	{
 		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
@@ -172,6 +183,11 @@ bool CRedis_Utils::set(const char* _key, const char* _value, char *sRlt)
 
 bool CRedis_Utils::push(const char* list_name, const char* _value, char *sRlt)
 {
+	if (sRlt == nullptr)
+	{
+		ERRORLOG << "char* sRlt pointed to null";
+		return false;
+	}
 	if (!is_connected)
 	{
 		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
@@ -192,6 +208,11 @@ bool CRedis_Utils::push(const char* list_name, const char* _value, char *sRlt)
 
 int CRedis_Utils::pop(const char* list_name, char *sRlt)
 {
+	if (sRlt == nullptr)
+	{
+		ERRORLOG << "char* sRlt pointed to null";
+		return -1;
+	}
 	if (!is_connected)
 	{
 		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
@@ -213,6 +234,16 @@ int CRedis_Utils::pop(const char* list_name, char *sRlt)
 
 void CRedis_Utils::subs(const char *key, subsCallback cb)
 {
+	if (strlen(key) == 0 || key == nullptr)
+	{
+		WARNLOG << "key is null... subs failed";
+		return;
+	}
+	if (cb == nullptr)
+	{
+		WARNLOG << "subsCallback is null... subs failed";
+		return;
+	}
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
@@ -243,6 +274,11 @@ void CRedis_Utils::subs(const char *key, subsCallback cb)
 
 void CRedis_Utils::unsubs(const char *key)
 {
+	if (strlen(key) == 0 || key == nullptr)
+	{
+		WARNLOG << "key is null... unsubs failed";
+		return;
+	}
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
@@ -267,6 +303,17 @@ void CRedis_Utils::unsubs(const char *key)
 
 void CRedis_Utils::pull(const char *key, pullCallback cb)
 {
+	if (strlen(key) == 0 || key == nullptr)
+	{
+		WARNLOG << "key is null... pull failed";
+		return;
+	}
+	if (cb == nullptr)
+	{
+		WARNLOG << "subsCallback is null... subs failed";
+		return;
+	}
+
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
@@ -296,6 +343,11 @@ void CRedis_Utils::pull(const char *key, pullCallback cb)
 
 void CRedis_Utils::unpull(const char *key)
 {
+	if (strlen(key) == 0 || key == nullptr)
+	{
+		WARNLOG << "key is null... unpull failed";
+		return;
+	}
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
@@ -321,6 +373,18 @@ void CRedis_Utils::unpull(const char *key)
 void CRedis_Utils::subsClientGetOp(const char *key, const char *reqChlName,
 	const char *heartbeatChnName, clientOpCallBack cb)
 {
+	if (strlen(key) == 0 || key == nullptr
+		|| strlen(reqChlName) == 0 || reqChlName == nullptr
+		|| strlen(heartbeatChnName) == 0 || heartbeatChnName == nullptr)
+	{
+		WARNLOG << "key or reqChlName or heartbeatChnName is null... subs failed!!!";
+		return;
+	}
+	if (cb == nullptr)
+	{
+		WARNLOG << "subsCallback is null... subs failed";
+		return;
+	}
 	if (!is_connected)
 	{
 		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
@@ -354,6 +418,11 @@ void CRedis_Utils::subsClientGetOp(const char *key, const char *reqChlName,
 
 void CRedis_Utils::unsubClientGetOp(const char *keys)
 {
+	if (strlen(keys) == 0 || keys == nullptr)
+	{
+		WARNLOG << "key is null... unsubClientGetOp failed";
+		return;
+	}
 	if (!is_connected)
 	{
 		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
@@ -460,9 +529,9 @@ bool CRedis_Utils::sendCmd(const char *cmd, char *sRlt)
 bool CRedis_Utils::replyCheck(redisReply *pRedisReply, char *sReply)
 {
 	bool bRlt = true;
+
 	switch (pRedisReply->type) {
 	case REDIS_REPLY_STATUS:		//表示状态，内容通过str字段查看，字符串长度是len字段
-		bRlt = false;
 		DEBUGLOG << "type:REDIS_REPLY_STATUS, reply->len:" 
 			<< pRedisReply->len << ", reply->str:" << pRedisReply->str;
 		memcpy(sReply, pRedisReply->str, pRedisReply->len);
@@ -505,6 +574,7 @@ bool CRedis_Utils::replyCheck(redisReply *pRedisReply, char *sReply)
 		bRlt = false;
 		break;
 	}
+	
 	return bRlt;
 }
 

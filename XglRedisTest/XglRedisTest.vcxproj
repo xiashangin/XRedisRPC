@@ -162,6 +162,11 @@
     <ClInclude Include="RedisRPC.h" />
     <ClInclude Include="Redis_Utils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libXglRedis\libXglRedis.vcxproj">
+      <Project>{5285f2f6-abf1-4941-a69b-1762df51ad54}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -55,7 +55,8 @@ extern "C"
 #define REQLIST		"request_redisRPC_list"
 #define REPLIST		"respond_redisRPC_list"
 
-#define HEARTBEATTIMEOUT 10		//10s不更新heartbeat
+#define HEARTBEATTIMEOUT	10		//10s不更新heartbeat
+#define HEARTBEATINTERVAL	3
 
 
 typedef std::map<std::string, std::string>		mapReqchnl;	//getkey-->requestChnl
