@@ -39,9 +39,9 @@ int main(int argc, char const *argv[])
 	//∂©‘ƒ∑¢≤º≤‚ ‘
 	//subs_test();
 	//pull_test();
-	//subGetOp();
+	subGetOp();
 
-	abnormalTest(redis);
+	//abnormalTest(redis);
 
 	getchar();
 	return 0;
@@ -234,7 +234,7 @@ void subGetOp()
 
 	char msg[256];
 	memset(msg, 0, 256);
-	//redisA.get("gethelloOp", msg);
+	redisA.get("gethelloOp", msg);
 	//redisB.get("gethelloOp", msg);
 	DEBUGLOG << "get result = " << msg;
 

@@ -157,7 +157,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_tool.h" />
-    <ClInclude Include="include\redis_ae\ae.h" />
     <ClInclude Include="include\uuid\uuid4.h" />
     <ClInclude Include="RedisRPC.h" />
     <ClInclude Include="Redis_Utils.h" />

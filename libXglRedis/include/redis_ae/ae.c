@@ -30,18 +30,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <sys/types.h>
 #ifdef _WIN32
-  #include <sys/types.h> 
+  #include <Win32_Interop/Win32_FDAPI.h>
+  #include <Win32_Interop/Win32_Service.h>
   #include <sys/timeb.h>
-  #include "../src/Win32_Interop/Win32_FDAPI.h"
-  #include "../src/Win32_Interop/Win32_Service.h"
 #else
   #include <sys/time.h>
   #include <unistd.h>
   #include <poll.h>
 #endif
+#include <stdio.h>
+#include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>

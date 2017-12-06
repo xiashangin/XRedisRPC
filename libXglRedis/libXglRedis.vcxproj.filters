@@ -49,9 +49,6 @@
     <ClInclude Include="include\uuid\uuid4.h">
       <Filter>uuid</Filter>
     </ClInclude>
-    <ClInclude Include="include\redis_ae\ae.h">
-      <Filter>redis_ae</Filter>
-    </ClInclude>
     <ClInclude Include="common_tool.h">
       <Filter>头文件</Filter>
     </ClInclude>

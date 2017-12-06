@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common_tool.h"
 //#ifdef _WIN32
 //#include <process.h>
 //#define sleep(x) Sleep(x)
@@ -21,6 +20,8 @@ extern "C"
 #else
 #include <hiredis/adapters/libevent.h>
 #endif
+#include "common_tool.h"
+
 //#include "easylogging++.h"
 
 //#define INFOLOG LOG(INFO)<<__FUNCTION__<<"***"
