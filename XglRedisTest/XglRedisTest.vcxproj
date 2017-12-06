@@ -152,7 +152,15 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\uuid\uuid4.cpp" />
     <ClCompile Include="XglRedisTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common_tool.h" />
+    <ClInclude Include="include\easylog\easylogging++.h" />
+    <ClInclude Include="include\uuid\uuid4.h" />
+    <ClInclude Include="RedisRPC.h" />
+    <ClInclude Include="Redis_Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

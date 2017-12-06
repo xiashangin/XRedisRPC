@@ -2,18 +2,20 @@
 
 #include "RedisRPC.h"
 
-#ifdef _WIN32
-#include <WinSock2.h>
-#else
-#include <sys/time.h>
-#endif // _WIN32
+//#ifdef _WIN32
+//#include <WinSock2.h>
+//#else
+//#include <sys/time.h>
+//#endif // _WIN32
 
 
 typedef void(*subsCallback)(const char *key, const char *value);
 typedef void(*pullCallback)(const char *key, const char *value);
+typedef void(*clientOpCallBack)(const char *key, const char *value);
 
-typedef std::map<std::string, subsCallback> mapSubsCB;	//subkey-->subfunc
-typedef std::map<std::string, pullCallback> mapPullCB;	//pullkey-->subfunc
+typedef std::map<std::string, subsCallback> mapSubsCB;		//subkey-->subfunc
+typedef std::map<std::string, pullCallback> mapPullCB;		//pullkey-->subfunc
+typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
 
 class CRedis_Utils
 {
@@ -21,21 +23,22 @@ public:
 	CRedis_Utils(std::string clientID);
 	~CRedis_Utils();
 
-	/////考虑将返回值改为sRlt字符串的长度/////
 	//客户端基本操作函数
 	/*
 	isSubs说明：默认false
-		false：不使用redis的键空间功能，即subs、pull、subsClientGetOp等接口不起作用
-		true：启用redis的键空间功能
+		false：不使用redis的键空间通知功能，即subs、pull、subsClientGetOp等接口不起作用
+		true：启用redis的键空间通知功能
 	*/
 	bool connect(const char* ip, int port, bool isSubs = false);		//连接redis服务并订阅redis键空间通知
 	void disconnect();
 
+	//redis基本操作
 	int  get(const char* _key, char *sRlt);		//-1失败  0 key无对应的值
 	bool set(const char* _key, const char* _value, char *sRlt);
 	bool push(const char* list_name, const char* _value, char *sRlt);
-	int pop(const char* list_name, char *sRlt);
+	int  pop(const char* list_name, char *sRlt);
 
+	//redis订阅功能
 	void subs(const char *key, subsCallback cb);	//subscribe channel
 	void unsubs(const char *key);					//unsubscribe channel
 	void pull(const char *key, pullCallback cb);	//pull list
@@ -43,7 +46,9 @@ public:
 
 	//业务处理模块
 	void subsClientGetOp(const char *keys, const char *reqChlName,
-		const char *heartbeatChnName);
+		const char *heartbeatChnName, clientOpCallBack cb);			//注册监听客户端get key操作
+	void unsubClientGetOp(const char *keys);						//注销监听客户端get key操作
+	void stopSubClientGetOp();										//取消监听客户端全部get操作
 
 private:
 	void close();
@@ -72,7 +77,12 @@ private:
 
 	mapSubsCB m_subsKeys;		//订阅信息  键-->回调函数
 	mapPullCB m_pullKeys;		//pull信息  键-->回调函数
-	
+	mapReqCB  m_reqChnl;		//请求队列	队列名-->回调函数
+
+	mutex subs_lock;
+	mutex pull_lock;
+	mutex req_lock;
+
 	std::string ip;				//redis ip
 	int port;					//redis 端口
 

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -17,6 +18,7 @@ using namespace std;
 extern "C" {
 #include "include/uuid/uuid4.h"
 }
+
 
 template<class T>
 std::string num2str ( const T num );

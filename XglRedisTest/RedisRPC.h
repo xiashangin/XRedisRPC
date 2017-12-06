@@ -11,6 +11,7 @@
 
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
+#include <signal.h> 
 #ifdef _WIN32
 #include <Win32_Interop/win32fixes.h>
 extern "C"
@@ -20,13 +21,19 @@ extern "C"
 #else
 #include <hiredis/adapters/libevent.h>
 #endif
-#include "include/easylog/easylogging++.h"
+//#include "easylogging++.h"
 
-#define INFOLOG LOG(INFO)<<__FUNCTION__<<"***"
-#define TRACELOG LOG(TRACE)<<__FUNCTION__<<"***"
-#define WARNLOG LOG(WARNING)<<__FUNCTION__<<"***"
-#define DEBUGLOG LOG(DEBUG)<<__FUNCTION__<<"***"
-#define ERRORLOG LOG(ERROR)<<__FUNCTION__<<"***"
+//#define INFOLOG LOG(INFO)<<__FUNCTION__<<"***"
+//#define TRACELOG LOG(TRACE)<<__FUNCTION__<<"***"
+//#define WARNLOG LOG(WARNING)<<__FUNCTION__<<"***"
+//#define DEBUGLOG LOG(DEBUG)<<__FUNCTION__<<"***"
+//#define ERRORLOG LOG(ERROR)<<__FUNCTION__<<"***"
+
+#define INFOLOG cout<<endl<<time2str(time(NULL))<<"[info]"<<__FUNCTION__<<"***"
+#define TRACELOG cout<<endl<<time2str(time(NULL))<<"[trace]"<<__FUNCTION__<<"***"
+#define WARNLOG cout<<endl<<time2str(time(NULL))<<"[warn]"<<__FUNCTION__<<"***"
+#define DEBUGLOG cout<<endl<<time2str(time(NULL))<<"[debug]"<<__FUNCTION__<<"***"
+#define ERRORLOG cout<<endl<<time2str(time(NULL))<<"[error]"<<__FUNCTION__<<"***"
 
 #define REDIS_BUF_SIZE 1024 * 2
 
@@ -50,11 +57,9 @@ extern "C"
 
 #define HEARTBEATTIMEOUT 10		//10s不更新heartbeat
 
-typedef void(*getCallback)(const char *key);
 
-typedef std::map<std::string, getCallback>  mapgetCB;	//getkey-->getfunc
-typedef std::map<std::string, std::string>  mapReqchnl;	//getkey-->requestChnl
-typedef std::map<std::string, std::string>  mapHBchnl;	//getkey-->HeartBeatChnl
+typedef std::map<std::string, std::string>		mapReqchnl;	//getkey-->requestChnl
+typedef std::map<std::string, std::string>		mapHBchnl;	//getkey-->HeartBeatChnl
 
 class CRedisRPC
 {
@@ -72,10 +77,11 @@ public:
 	//业务处理模块
 	void subsClientGetOp(const char *keys, const char *reqChlName,
 		const char *heartbeatChnName);		//注册key以及回调函数
+	std::string unsubClientGetOp(const char *keys);
+	void clearChnl();
 private:
 	static void* thTimeout(void *arg);
 
-	mapgetCB   m_getKeys;		
 	mapReqchnl m_reqChnl;
 	mapHBchnl  m_HBChnl;
 

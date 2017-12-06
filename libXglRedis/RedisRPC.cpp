@@ -1,18 +1,21 @@
 #include "RedisRPC.h"
 
-INITIALIZE_EASYLOGGINGPP
+//INITIALIZE_EASYLOGGINGPP
 bool CRedisRPC::keyProcessDone = false;
 
 CRedisRPC::CRedisRPC(std::string ip, int port)
 {
 	this->ip = ip;
 	this->port = port;
-	this->requestID = generate_uuid();
-	el::Configurations conf("easylog.conf");
-	el::Loggers::reconfigureAllLoggers(conf);
+	if(this->requestID.length() <= 0)
+	{
+		this->requestID = generate_uuid();
+		//el::Configurations conf("easylog.conf");
+		//el::Loggers::reconfigureAllLoggers(conf);
+	}
 
-	DEBUGLOG << "初始化日志库, redis ip = " << this->ip 
-		<< ", port = " << this->port;
+	//DEBUGLOG << "初始化日志库, redis ip = " << this->ip 
+	//	<< ", port = " << this->port;
 }
 
 
@@ -60,13 +63,14 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	std::string heartbeat;
 	if (reply->type == REDIS_REPLY_STRING)
 	{
-		DEBUGLOG << "heartbeat = " << heartbeat << ", now = " << time(NULL);
 		heartbeat = reply->str;
+		DEBUGLOG << "heartbeat = " << heartbeat << ", now = " << time(NULL);
 		if (time(NULL) - atoi(heartbeat.c_str()) <= HEARTBEATTIMEOUT)
 			bRlt = true;
 	}
+	else
+		WARNLOG << "获取心跳数据失败...";
 	freeReplyObject(reply);
-	WARNLOG << "获取心跳数据失败...";
 	return bRlt;
 }
 
@@ -158,6 +162,21 @@ void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
 		DEBUGLOG << "该键已经订阅 key = " << keys << endl;
 }
 
+std::string CRedisRPC::unsubClientGetOp(const char *keys)
+{
+	mapReqchnl::iterator it = m_reqChnl.find(std::string(keys));
+	std::string chnlName = "";
+
+	if (it != m_reqChnl.end())
+	{
+		chnlName = m_reqChnl[keys];
+		m_HBChnl.erase(keys);
+		m_reqChnl.erase(keys);
+	}
+	DEBUGLOG << "erase key = " << keys << ", size = " << m_HBChnl.size() << ", " << m_reqChnl.size();
+	return chnlName;
+}
+
 void* CRedisRPC::thTimeout(void *arg)
 {
 	std::string args = *(std::string *)arg;
@@ -228,4 +247,12 @@ void* CRedisRPC::thTimeout(void *arg)
 	}
 
 	return nullptr;
+}
+
+void CRedisRPC::clearChnl()
+{
+	if (m_reqChnl.size() > 0)
+		m_reqChnl.clear();
+	if (m_HBChnl.size() > 0)
+		m_HBChnl.clear();
 }

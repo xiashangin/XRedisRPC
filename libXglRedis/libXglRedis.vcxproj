@@ -148,17 +148,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common_tool.cpp" />
-    <ClCompile Include="include\easylog\easylogging++.cc" />
     <ClCompile Include="include\redis_ae\adlist.c" />
     <ClCompile Include="include\redis_ae\ae.c" />
     <ClCompile Include="include\redis_ae\zmalloc.c" />
-    <ClCompile Include="include\uuid\uuid4.c" />
+    <ClCompile Include="include\uuid\uuid4.cpp" />
     <ClCompile Include="RedisRPC.cpp" />
     <ClCompile Include="Redis_Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_tool.h" />
-    <ClInclude Include="include\easylog\easylogging++.h" />
     <ClInclude Include="include\redis_ae\ae.h" />
     <ClInclude Include="include\uuid\uuid4.h" />
     <ClInclude Include="RedisRPC.h" />

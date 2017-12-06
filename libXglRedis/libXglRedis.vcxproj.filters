@@ -12,23 +12,17 @@
     <Filter Include="redis_ae">
       <UniqueIdentifier>{765332c1-0daf-4ec4-b9b7-289868114e07}</UniqueIdentifier>
     </Filter>
-    <Filter Include="easylog">
-      <UniqueIdentifier>{29e0c256-87be-4aa4-92af-5aff9c7f1445}</UniqueIdentifier>
-    </Filter>
     <Filter Include="uuid">
       <UniqueIdentifier>{0fddf117-0fdb-4a41-8952-e51ed994b7ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="log">
+      <UniqueIdentifier>{29e0c256-87be-4aa4-92af-5aff9c7f1445}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\easylog\easylogging++.cc">
-      <Filter>easylog</Filter>
-    </ClCompile>
-    <ClCompile Include="include\uuid\uuid4.c">
-      <Filter>uuid</Filter>
-    </ClCompile>
     <ClCompile Include="include\redis_ae\adlist.c">
       <Filter>redis_ae</Filter>
     </ClCompile>
@@ -47,11 +41,11 @@
     <ClCompile Include="RedisRPC.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
+    <ClCompile Include="include\uuid\uuid4.cpp">
+      <Filter>uuid</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\easylog\easylogging++.h">
-      <Filter>easylog</Filter>
-    </ClInclude>
     <ClInclude Include="include\uuid\uuid4.h">
       <Filter>uuid</Filter>
     </ClInclude>
