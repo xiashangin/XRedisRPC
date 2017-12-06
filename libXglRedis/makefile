@@ -10,5 +10,8 @@ redisRPC: RedisRPC.cpp
 redisUtil: Redis_Utils.cpp
 	g++ -c Redis_Utils.cpp -o util.o -std=c++11
 
+install:
+	cp libxglhiredis.a libxglhiredis.so ../XglRedisTest/
+
 clean:
 	rm *.o libxglhiredis.a libxglhiredis.so
