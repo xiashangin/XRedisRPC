@@ -462,18 +462,24 @@ void CRedis_Utils::close()
 		<< this->port;
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));	//防止程序退出过快，导致异常。异步回调函数仍在运行...
 	if (pRedisContext != nullptr)
+	{
 		redisFree(pRedisContext);
+		pRedisContext = nullptr;
+	}
 	if (needSubs)
 	{
 		if (pRedisAsyncContext) {
 			redisAsyncFree(pRedisAsyncContext);
+			pRedisAsyncContext = nullptr;
 			//redisAsyncDisconnect(pRedisAsyncContext);
 
 #ifdef _WIN32
 			aeStop(loop);
+			loop = nullptr;
 #else
 			//event_base_loopbreak(base);
 			event_base_free(base);
+			base = nullptr;
 #endif
 		}
 	}
@@ -592,6 +598,7 @@ void CRedis_Utils::disconnectCallback(const redisAsyncContext *c, int status)
 {
 	if (status != REDIS_OK) {
 		ERRORLOG << "Error: " << c->errstr;
+		return;
 	}
 	DEBUGLOG << "Async DisConnected...";
 }

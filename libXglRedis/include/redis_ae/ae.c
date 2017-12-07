@@ -30,9 +30,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #ifdef _WIN32
   #include <Win32_Interop/Win32_FDAPI.h>
   #include <Win32_Interop/Win32_Service.h>
+  #include <sys/types.h> 
   #include <sys/timeb.h>
 #else
   #include <sys/time.h>

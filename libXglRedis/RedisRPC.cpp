@@ -100,7 +100,10 @@ void CRedisRPC::processKey(const char *key, int timeout)
 	{
 		WARNLOG << "连接远程服务失败(redis)... ip = " << ip << ", port = " << port;
 		if(context)
+		{
 			redisFree(context);
+			context = nullptr;
+		}
 		return;
 	}
 	//远程调用处理key值
@@ -111,7 +114,10 @@ void CRedisRPC::processKey(const char *key, int timeout)
 	{
 		WARNLOG << "请求远程服务失败... pushCMD = " << pushCmd;
 		if (context)
+		{
 			redisFree(context);
+			context = nullptr;
+		}
 		return;
 	}
 	CRedisRPC::keyProcessDone = false;
@@ -123,24 +129,34 @@ void CRedisRPC::processKey(const char *key, int timeout)
 	{
 		WARNLOG << "等待远程服务处理结果失败..." << endl;
 		if (context)
+		{
 			redisFree(context);
+			context = nullptr;
+		}
 		return;
 	}
-	freeReplyObject(reply);
+	if (reply != nullptr)
+		freeReplyObject(reply);
 
 	std::string timer_msg = ip + "&_&" + int2str(port) + "&_&" + int2str(timeout) + "&_&" + key;
 	std::thread thTimer(thTimeout, &timer_msg);
 
 	DEBUGLOG << "等待远程服务处理结果...";
 	redisGetReply(context, (void **)&reply);
-	freeReplyObject(reply);
+	if (reply != nullptr)
+		freeReplyObject(reply);
 	CRedisRPC::keyProcessDone = true;
 	thTimer.join();
 	DEBUGLOG << "远程处理完成...";
 	reply = (redisReply *)redisCommand(context, unsubcmd.c_str());
 
-	freeReplyObject(reply);
-	redisFree(context);
+	if (reply != nullptr)
+		freeReplyObject(reply);
+	if (context)
+	{
+		redisFree(context);
+		context = nullptr;
+	}
 }
 
 void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
