@@ -221,7 +221,7 @@ void* CRedisRPC::thTimeout(void *arg)
 			cout << "connect error:" << context->errstr << endl;
 		else
 			cout << "connect error: can't allocate redis context." << endl;
-		return false;
+		return nullptr;
 	}
 	char sRlt[256];
 	memset(sRlt, 0, 256);
