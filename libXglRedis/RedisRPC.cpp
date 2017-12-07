@@ -93,7 +93,7 @@ bool CRedisRPC::isKeySubs(const char *key)
 	return bRlt;
 }
 
-void CRedisRPC::processKey(const char *key, int timeout)
+void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 {
 	DEBUGLOG << "开始请求远程服务处理... key = " << key;
 	if (!connect(ip.c_str(), port))
@@ -104,10 +104,12 @@ void CRedisRPC::processKey(const char *key, int timeout)
 			redisFree(context);
 			context = nullptr;
 		}
+		processKeyLock.unlock(); 
 		return;
 	}
 	//远程调用处理key值
 	//将键值塞入对应的请求队列
+	//processKeyLock.lock();
 	std::string requestURL = m_reqChnl[key] + requestID;
 	std::string pushCmd = std::string(R_PUSH) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
 	if (!redisCommand(context, pushCmd.c_str()))
@@ -118,8 +120,10 @@ void CRedisRPC::processKey(const char *key, int timeout)
 			redisFree(context);
 			context = nullptr;
 		}
+		processKeyLock.unlock();
 		return;
 	}
+
 	CRedisRPC::keyProcessDone = false;
 	//等待处理结果，超时返回
 	redisReply *reply;
@@ -133,6 +137,7 @@ void CRedisRPC::processKey(const char *key, int timeout)
 			redisFree(context);
 			context = nullptr;
 		}
+		processKeyLock.unlock();
 		return;
 	}
 	if (reply != nullptr)
@@ -142,6 +147,7 @@ void CRedisRPC::processKey(const char *key, int timeout)
 	std::thread thTimer(thTimeout, &timer_msg);
 
 	DEBUGLOG << "等待远程服务处理结果...";
+	processKeyLock.unlock();
 	redisGetReply(context, (void **)&reply);
 	if (reply != nullptr)
 		freeReplyObject(reply);

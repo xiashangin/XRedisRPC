@@ -75,7 +75,7 @@ public:
 	bool isServiceModelAvailable(const char *key);					//检查是否有可用服务
 	bool isKeySubs(const char *key);			//检查key是否需要处理
 
-	void processKey(const char *key, int timeout);			//处理key, timeout--ms
+	void processKey(const char *key, int timeout, mutex &processKeyLock);			//处理key, timeout--ms
 
 	//业务处理模块
 	void subsClientGetOp(const char *keys, const char *reqChlName,

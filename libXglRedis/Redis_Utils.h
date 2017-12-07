@@ -79,6 +79,10 @@ private:
 	mapPullCB m_pullKeys;		//pull信息  键-->回调函数
 	mapReqCB  m_reqChnl;		//请求队列	队列名-->回调函数
 
+	mutex get_lock;				//多线程同步锁
+	mutex set_lock;
+	mutex push_lock;
+	mutex pop_lock;
 	mutex subs_lock;
 	mutex pull_lock;
 	mutex req_lock;

@@ -122,37 +122,40 @@ int CRedis_Utils::get(const char* _key, char* sRlt)
 		memcpy(sRlt, rlt.c_str(), rlt.length());
 		return -1;
 	}
+	get_lock.lock();
+	bool bRlt = false;
 	std::string new_key = genNewKey(_key);
 	std::string cmd = std::string(R_GET) + std::string(" ") + std::string(new_key);
 	DEBUGLOG << "get cmd = " << cmd;
-
 	if(!redisRPC.isServiceModelAvailable(new_key.c_str()) || !redisRPC.isKeySubs(new_key.c_str()))
 	{
 		//get失败(nil也表示失败) 该key值不需要处理或者没有可用服务
 		//直接返回数据
 		DEBUGLOG << "no available service or no service subs the key-->" << new_key;
-		if (sendCmd(cmd.c_str(), sRlt))
+		bRlt = sendCmd(cmd.c_str(), sRlt);
+		get_lock.unlock();
+		if (bRlt)
 			return strlen(sRlt);
 		else if (strlen(sRlt))
 			return -1;
-		else
-			return 0;
 	} 
 	if (strlen(sRlt) > 0)
 		memset(sRlt, 0, strlen(sRlt));
+	//get_lock.unlock();
 
 	//远程调用处理数据
 	DEBUGLOG << "process the key before return.   key-->" << new_key;
-	redisRPC.processKey(new_key.c_str(), 5000);		
+	redisRPC.processKey(new_key.c_str(), 5000, get_lock);		
 	DEBUGLOG << "process the key, job done.   key-->" << new_key;
 	
 	//返回数据
-	if (sendCmd(cmd.c_str(), sRlt))
+	get_lock.lock();
+	bRlt = sendCmd(cmd.c_str(), sRlt);
+	get_lock.unlock();
+	if (bRlt)		
 		return strlen(sRlt);
 	else if (sizeof(sRlt))
 		return -1;
-	else
-		return 0;
 }
 
 bool CRedis_Utils::set(const char* _key, const char* _value, char *sRlt)
@@ -170,12 +173,16 @@ bool CRedis_Utils::set(const char* _key, const char* _value, char *sRlt)
 		memcpy(sRlt, rlt.c_str(), rlt.length());
 		return false;
 	}
+	set_lock.lock();
+	bool bRlt = false;
 	std::string new_key = genNewKey(_key);
 	std::string cmd = std::string(R_SET) + std::string(" ") 
 		+ new_key + std::string(" ") + _value;
 
 	DEBUGLOG << "set cmd = " << cmd;
-	if (sendCmd(cmd.c_str(), sRlt))
+	bRlt = sendCmd(cmd.c_str(), sRlt);
+	set_lock.unlock();
+	if (bRlt)
 		return true;
 	else
 		return false;
@@ -196,11 +203,14 @@ bool CRedis_Utils::push(const char* list_name, const char* _value, char *sRlt)
 		memcpy(sRlt, rlt.c_str(), rlt.length());
 		return false;
 	}
+	push_lock.lock();
 	std::string new_list_name = genNewKey(list_name);
 	std::string cmd = std::string(R_PUSH) + std::string(" ")
 		+ new_list_name + std::string(" ") + _value;
 	DEBUGLOG << "push cmd = " << cmd;
-	if (sendCmd(cmd.c_str(), sRlt))
+	bool bRlt = sendCmd(cmd.c_str(), sRlt);
+	push_lock.unlock();
+	if (bRlt)
 		return true;
 	else
 		return false;
@@ -221,15 +231,16 @@ int CRedis_Utils::pop(const char* list_name, char *sRlt)
 		memcpy(sRlt, rlt.c_str(), rlt.length());
 		return -1;
 	}
+	pop_lock.lock();
 	std::string new_list_name = genNewKey(list_name);
 	std::string cmd = std::string(R_POP) + std::string(" ") + new_list_name;
 	DEBUGLOG << "pop cmd = " << cmd; 
-	if (sendCmd(cmd.c_str(), sRlt))
+	bool bRlt = sendCmd(cmd.c_str(), sRlt);
+	pop_lock.unlock();
+	if (bRlt)
 		return strlen(sRlt);
 	else if (strlen(sRlt))
 		return -1;
-	else
-		return 0;
 }
 
 void CRedis_Utils::subs(const char *key, subsCallback cb)
@@ -553,7 +564,7 @@ bool CRedis_Utils::replyCheck(redisReply *pRedisReply, char *sReply)
 		memcpy(sReply, int2str(pRedisReply->integer).c_str(), int2str(pRedisReply->integer).length());
 		break;
 	case REDIS_REPLY_NIL:			//没有数据返回
-		bRlt = false;
+		//bRlt = false;
 		DEBUGLOG << "type:REDIS_REPLY_NIL, no data";
 		break;
 	case REDIS_REPLY_STRING:		//返回字符串，查看str,len字段

@@ -22,9 +22,11 @@ void subGetOp();
 void getCBA(const char *key, const char *value);
 void getCBB(const char *key, const char *value);
 
-
+#define THREADNUM 10
 void abnormalTest(CRedis_Utils& redis);
 
+
+static void* multiThread(void *args);
 
 int main(int argc, char const *argv[])
 {
@@ -39,10 +41,16 @@ int main(int argc, char const *argv[])
 	//订阅发布测试
 	//subs_test();
 	//pull_test();
-	subGetOp();
+	//subGetOp();
 
 	//abnormalTest(redis);
 
+	//多线程测试
+	vector<thread> thGroup;
+	for (int i = 0; i < THREADNUM; ++i)
+		thGroup.push_back(thread(multiThread, &redis));
+	for (int i = 0; i < THREADNUM; ++i)
+		thGroup[i].join();
 	getchar();
 	return 0;
 }
@@ -65,9 +73,9 @@ void test_set(CRedis_Utils& redis)
 void test_get(CRedis_Utils& redis)
 {
 	char *msg = (char *)malloc(REDIS_BUF_SIZE);
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 1; ++i)
 	{
-		std::string key_ = "hello" + int2str(i);
+		std::string key_ = "helloasd" + int2str(i);
 		memset(msg, 0, REDIS_BUF_SIZE);
 		int size = redis.get(key_.c_str(), msg);
 		if (size > 0)
@@ -226,13 +234,14 @@ void subGetOp()
 	CRedis_Utils redisB("B");
 	redisA.connect("192.168.31.217", 6379, true);
 	redisB.connect("192.168.31.217", 6379, true);
+	char msg[256];
+	memset(msg, 0, 256);
 
 	redisA.subsClientGetOp("gethelloOp", "gethelloOpreq",
 		"gethelloOphb", getCBA);	//注册
 	redisA.set("gethelloOphb", int2str(time(NULL)).c_str(), 
-		nullptr);	//定时发送心跳
+		msg);	//定时发送心跳
 
-	char msg[256];
 	memset(msg, 0, 256);
 	redisA.get("gethelloOp", msg);
 	//redisB.get("gethelloOp", msg);
@@ -245,15 +254,16 @@ void getCBA(const char *key, const char *value)
 	DEBUGLOG << "clientA got get msg!!!";
 	CRedis_Utils redis("A");
 	redis.connect("192.168.31.217", 6379);
-
+	char msg[256];
+	memset(msg, 0, 256);
 	//数据处理，处理完成之后调用set接口更新数据
 	//通知客户端处理完成
 	if (strlen(value) == 0)
-		redis.set(key, "nil", nullptr);
+		redis.set(key, "nil", msg);
 	else
 	{
 		std::string value_ = value + std::string("getCBA");
-		char msg[256];
+		
 		redis.set(key, value_.c_str(), msg);
 	}
 }
@@ -272,4 +282,25 @@ void abnormalTest(CRedis_Utils& redis)
 
 	redis.subsClientGetOp("", "", "", nullptr);
 	redis.unsubClientGetOp("");
+}
+
+void* multiThread(void *args)
+{
+	CRedis_Utils *redis = (CRedis_Utils *)args;
+	stringstream ss;
+	std::string str;
+	ss << std::this_thread::get_id();
+	ss >> str;
+	std::string key = "hellolist" + str;
+	char *msg = (char *)malloc(REDIS_BUF_SIZE);
+	for (int i = 0; i < 10; ++i)
+	{
+		memset(msg, 0, REDIS_BUF_SIZE);
+		if (redis->pop(key.c_str(), msg) >= 0)
+			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
+		else
+			ERRORLOG << "set op fail!!! err = " << msg << endl;
+	}
+	free(msg);
+	return nullptr;
 }
