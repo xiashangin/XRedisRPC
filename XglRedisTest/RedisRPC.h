@@ -13,14 +13,15 @@
 #include <signal.h> 
 #ifdef _WIN32
 #include <Win32_Interop/win32fixes.h>
+#include "common_tool.h"
 extern "C"
 {
 #include <hiredis/adapters/ae.h>
 }
 #else
+#include "common_tool.h"
 #include <hiredis/adapters/libevent.h>
 #endif
-#include "common_tool.h"
 
 //#include "easylogging++.h"
 
