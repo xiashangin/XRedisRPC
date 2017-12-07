@@ -30,10 +30,10 @@ static void* multiThread(void *args);
 
 int main(int argc, char const *argv[])
 {
-	CRedis_Utils redis("A");
+	CRedis_Utils redis("#@$%%");
 	redis.connect("192.168.31.217", 6379);
 	//基本操作测试
-	//test_set(redis);
+	test_set(redis);
 	//test_get(redis);
 	//test_push(redis);
 	//test_pop(redis);
@@ -46,11 +46,11 @@ int main(int argc, char const *argv[])
 	//abnormalTest(redis);
 
 	//多线程测试
-	vector<thread> thGroup;
-	for (int i = 0; i < THREADNUM; ++i)
-		thGroup.push_back(thread(multiThread, &redis));
-	for (int i = 0; i < THREADNUM; ++i)
-		thGroup[i].join();
+	//vector<thread> thGroup;
+	//for (int i = 0; i < THREADNUM; ++i)
+	//	thGroup.push_back(thread(multiThread, &redis));
+	//for (int i = 0; i < THREADNUM; ++i)
+	//	thGroup[i].join();
 	getchar();
 	return 0;
 }
@@ -60,8 +60,8 @@ void test_set(CRedis_Utils& redis)
 	char *msg = (char *)malloc(REDIS_BUF_SIZE);
 	for (int i = 0; i < 10; ++i)
 	{
-		std::string key_ = "hello" + int2str(i);
-		std::string value = "world" + int2str(i);
+		std::string key_ = "!@##%$" + int2str(i);
+		std::string value = "world" +int2str(i);
 		memset(msg, 0, REDIS_BUF_SIZE);
 		if (redis.set(key_.c_str(), value.c_str(), msg))	
 			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
@@ -73,9 +73,9 @@ void test_set(CRedis_Utils& redis)
 void test_get(CRedis_Utils& redis)
 {
 	char *msg = (char *)malloc(REDIS_BUF_SIZE);
-	for (int i = 0; i < 1; ++i)
+	for (int i = 0; i < 10; ++i)
 	{
-		std::string key_ = "helloasd" + int2str(i);
+		std::string key_ = "hello" + int2str(i);
 		memset(msg, 0, REDIS_BUF_SIZE);
 		int size = redis.get(key_.c_str(), msg);
 		if (size > 0)

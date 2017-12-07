@@ -116,11 +116,15 @@ int CRedis_Utils::get(const char* _key, char* sRlt)
 
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip 
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip 
 			<< ", port = " << port;
-		std::string rlt = "redis is not connected...";
-		memcpy(sRlt, rlt.c_str(), rlt.length());
-		return -1;
+		if(!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			std::string rlt = "redis is not connected...";
+			memcpy(sRlt, rlt.c_str(), rlt.length());
+			return -1;
+		}
 	}
 	get_lock.lock();
 	bool bRlt = false;
@@ -167,11 +171,15 @@ bool CRedis_Utils::set(const char* _key, const char* _value, char *sRlt)
 	}
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		std::string rlt = "redis is not connected...";
-		memcpy(sRlt, rlt.c_str(), rlt.length());
-		return false;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			std::string rlt = "redis is not connected...";
+			memcpy(sRlt, rlt.c_str(), rlt.length());
+			return false;
+		}
 	}
 	set_lock.lock();
 	bool bRlt = false;
@@ -197,11 +205,15 @@ bool CRedis_Utils::push(const char* list_name, const char* _value, char *sRlt)
 	}
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		std::string rlt = "redis is not connected...";
-		memcpy(sRlt, rlt.c_str(), rlt.length());
-		return false;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			std::string rlt = "redis is not connected...";
+			memcpy(sRlt, rlt.c_str(), rlt.length());
+			return false;
+		}
 	}
 	push_lock.lock();
 	std::string new_list_name = genNewKey(list_name);
@@ -225,11 +237,15 @@ int CRedis_Utils::pop(const char* list_name, char *sRlt)
 	}
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		std::string rlt = "redis is not connected...";
-		memcpy(sRlt, rlt.c_str(), rlt.length());
-		return -1;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			std::string rlt = "redis is not connected...";
+			memcpy(sRlt, rlt.c_str(), rlt.length());
+			return -1;
+		}
 	}
 	pop_lock.lock();
 	std::string new_list_name = genNewKey(list_name);
@@ -258,11 +274,15 @@ void CRedis_Utils::subs(const char *key, subsCallback cb)
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		//std::string rlt = "redis is not connected...";
-		//memcpy(sRlt, rlt.c_str(), rlt.length());
-		return ;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			//std::string rlt = "redis is not connected...";
+			//memcpy(sRlt, rlt.c_str(), rlt.length());
+			return;
+		}
 	}
 	if(needSubs)
 	{
@@ -293,11 +313,15 @@ void CRedis_Utils::unsubs(const char *key)
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		//std::string rlt = "redis is not connected...";
-		//memcpy(sRlt, rlt.c_str(), rlt.length());
-		return ;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			//std::string rlt = "redis is not connected...";
+			//memcpy(sRlt, rlt.c_str(), rlt.length());
+			return;
+		}
 	}
 	subs_lock.lock();
 	mapSubsCB::iterator it = m_subsKeys.find(std::string(new_key));
@@ -328,11 +352,15 @@ void CRedis_Utils::pull(const char *key, pullCallback cb)
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		//std::string rlt = "redis is not connected...";
-		//memcpy(sRlt, rlt.c_str(), rlt.length());
-		return ;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			//std::string rlt = "redis is not connected...";
+			//memcpy(sRlt, rlt.c_str(), rlt.length());
+			return;
+		}
 	}
 	if(needSubs)
 	{
@@ -362,11 +390,15 @@ void CRedis_Utils::unpull(const char *key)
 	std::string new_key = genNewKey(key);
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		//std::string rlt = "redis is not connected...";
-		//memcpy(sRlt, rlt.c_str(), rlt.length());
-		return ;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			//std::string rlt = "redis is not connected...";
+			//memcpy(sRlt, rlt.c_str(), rlt.length());
+			return;
+		}
 	}
 	pull_lock.lock();
 	mapPullCB::iterator it = m_pullKeys.find(std::string(new_key));
@@ -398,11 +430,15 @@ void CRedis_Utils::subsClientGetOp(const char *key, const char *reqChlName,
 	}
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		//std::string rlt = "redis is not connected...";
-		//memcpy(sRlt, rlt.c_str(), rlt.length());
-		return ;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			//std::string rlt = "redis is not connected...";
+			//memcpy(sRlt, rlt.c_str(), rlt.length());
+			return;
+		}
 	}
 	if(needSubs)
 	{
@@ -436,11 +472,15 @@ void CRedis_Utils::unsubClientGetOp(const char *keys)
 	}
 	if (!is_connected)
 	{
-		DEBUGLOG << "redis 服务尚未连接... ip = " << ip
+		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << ip
 			<< ", port = " << port;
-		//std::string rlt = "redis is not connected...";
-		//memcpy(sRlt, rlt.c_str(), rlt.length());
-		return;
+		if (!connect(ip.c_str(), port, needSubs))
+		{
+			WARNLOG << "redis服务重新连接失败... ";
+			//std::string rlt = "redis is not connected...";
+			//memcpy(sRlt, rlt.c_str(), rlt.length());
+			return;
+		}
 	}
 	if (m_reqChnl.size() > 0)
 	{
