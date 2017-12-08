@@ -38,7 +38,7 @@ public:
 		返回值说明：
 			-1：操作失败，失败原因通过lpStrRlt查看
 			 0：lpStrKey对应的值为空
-			>0：操作成功，lpStrKey的值通过lpStrRlt查看，返回值的长度
+			>0：操作成功，lpStrKey的值通过lpStrRlt查看，返回lpStrRlt的长度
 
 		set()    push()
 		返回值说明：
@@ -64,12 +64,12 @@ public:
 private:
 	void close();
 	//实现业务模块的数据隔离
-	std::string genNewKey(std::string lpStrKeyOldKey);					//封装用户传入的key				
-	std::string getOldKey(std::string lpStrKeyNewKey);					//获取客户的原始key
-	bool sendCmd(const char *lpStrCmd, char *lpStrRlt);					//发送redis命令
+	std::string genNewKey(const std::string & lpStrOldKey);					//封装用户传入的key				
+	std::string getOldKey(const std::string & lpStrNewKey);					//获取客户的原始key
+	bool sendCmd(const char *lpStrCmd, char *lpStrRlt);				//发送redis命令
 	bool replyCheck(redisReply *rRedisReply, char *lpStrReply);		//解析redis应答消息
 
-	static void* thAsyncSubsAll(void *arg);						//redis键空间通知
+	static void* thAsyncSubsAll(void *arg);							//redis键空间通知
 
 	static void connectCallback(const redisAsyncContext *c, int iStatus);	//redis异步回调函数
 	static void disconnectCallback(const redisAsyncContext *c, int iStatus);
@@ -98,13 +98,13 @@ private:
 	mutex m_pullLock;
 	mutex m_reqLock;
 
-	std::string m_lpStrIp;				//redis ip
-	int m_iPort;					//redis 端口
+	std::string m_strIp;				//redis ip
+	int m_iPort;						//redis 端口
 
-	CRedisRPC m_redisRPC;			//redis RPC调用实现
+	CRedisRPC m_redisRPC;				//redis RPC调用实现
 
-	bool m_bNeedSubs;				//是否需要redis订阅功能
-	bool m_bIsConnected;			//连接redis成功标志
-	std::string m_lpStrClientId;		//客户端标志
+	bool m_bNeedSubs;					//是否需要redis订阅功能
+	bool m_bIsConnected;				//连接redis成功标志
+	std::string m_strClientId;			//客户端标志
 };
 

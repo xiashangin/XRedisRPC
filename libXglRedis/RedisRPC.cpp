@@ -5,11 +5,11 @@ bool CRedisRPC::m_bKeyProcessDone = false;
 
 CRedisRPC::CRedisRPC(std::string ip, int port)
 {
-	this->m_lpStrIp = ip;
+	this->m_strIp = ip;
 	this->m_iPort = port;
-	if(this->m_lpStrRequestID.length() <= 0)
+	if(this->m_strRequestID.length() <= 0)
 	{
-		this->m_lpStrRequestID = generate_uuid();
+		this->m_strRequestID = generate_uuid();
 		//el::Configurations conf("easylog.conf");
 		//el::Loggers::reconfigureAllLoggers(conf);
 	}
@@ -35,7 +35,7 @@ bool CRedisRPC::connect(const char* ip, int port)
 	timeval tv = { 3, 500 };
 	m_redisContext = (redisContext *)redisConnectWithTimeout(
 		ip, port, tv);
-	DEBUGLOG << "connect to redis server ip = " << this->m_lpStrIp << ", port = "
+	DEBUGLOG << "connect to redis server ip = " << this->m_strIp << ", port = "
 		<< this->m_iPort << ", isSubs = ";
 
 	if ((NULL == m_redisContext) || (m_redisContext->err))
@@ -54,7 +54,7 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	//检查是否有可用服务 m_HBChnl
 	DEBUGLOG << "查询是否有可用服务模块...";
 	bool bRlt = false;
-	if (!connect(m_lpStrIp.c_str(), m_iPort))
+	if (!connect(m_strIp.c_str(), m_iPort))
 	{
 		return false;
 	}
@@ -97,9 +97,9 @@ bool CRedisRPC::isKeySubs(const char *key)
 void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 {
 	DEBUGLOG << "开始请求远程服务处理... key = " << key;
-	if (!connect(m_lpStrIp.c_str(), m_iPort))
+	if (!connect(m_strIp.c_str(), m_iPort))
 	{
-		WARNLOG << "连接远程服务失败(redis)... ip = " << m_lpStrIp << ", port = " << m_iPort;
+		WARNLOG << "连接远程服务失败(redis)... ip = " << m_strIp << ", port = " << m_iPort;
 		if(m_redisContext)
 		{
 			redisFree(m_redisContext);
@@ -112,7 +112,7 @@ void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 	//将键值塞入对应的请求队列
 	//processKeyLock.lock();
 	std::string reqChnl = key + std::string(REQLIST);
-	std::string requestURL = reqChnl + m_lpStrRequestID;
+	std::string requestURL = reqChnl + m_strRequestID;
 	std::string pushCmd = std::string(R_PUSH) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
 	if (!redisCommand(m_redisContext, pushCmd.c_str()))
 	{
@@ -145,7 +145,7 @@ void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 	if (reply != nullptr)
 		freeReplyObject(reply);
 
-	std::string timer_msg = m_lpStrIp + "&_&" + int2str(m_iPort) + "&_&" + int2str(timeout) + "&_&" + key;
+	std::string timer_msg = m_strIp + "&_&" + int2str(m_iPort) + "&_&" + int2str(timeout) + "&_&" + key;
 	std::thread thTimer(thTimeout, &timer_msg);
 
 	DEBUGLOG << "等待远程服务处理结果...";
@@ -296,9 +296,9 @@ void* CRedisRPC::thSetHeartBeat(void *arg)
 		for (; it_hb != self->m_mapHBChnl.end(); ++it_hb)
 		{
 			std::string setHbCmd = std::string(R_SET) + " " + it_hb->second + " " + int2str(time(NULL));
-			if (!self->connect(self->m_lpStrIp.c_str(), self->m_iPort))
+			if (!self->connect(self->m_strIp.c_str(), self->m_iPort))
 			{
-				WARNLOG << "连接远程服务失败(redis)... ip = " << self->m_lpStrIp << ", port = " << self->m_iPort;
+				WARNLOG << "连接远程服务失败(redis)... ip = " << self->m_strIp << ", port = " << self->m_iPort;
 				if (self->m_redisContext)
 				{
 					redisFree(self->m_redisContext);

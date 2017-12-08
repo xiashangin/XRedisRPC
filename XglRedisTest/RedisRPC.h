@@ -88,9 +88,9 @@ private:
 	mapReqchnl m_mapReqChnl;
 	mapHBchnl  m_mapHBChnl;
 
-	std::string m_lpStrIp;				//redis ip
+	std::string m_strIp;				//redis ip
 	int m_iPort;					//redis ¶Ë¿Ú
-	std::string m_lpStrRequestID;
+	std::string m_strRequestID;
 	redisContext *m_redisContext;
 
 	static bool m_bKeyProcessDone;
