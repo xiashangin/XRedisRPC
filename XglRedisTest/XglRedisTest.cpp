@@ -237,7 +237,7 @@ void subGetOp()
 	char msg[256];
 	memset(msg, 0, 256);
 
-	redisA.subsClientGetOpSimple("hello", getCBA);
+	redisA.subsClientGetOp("hello", getCBA);
 
 
 	//redisA.subsClientGetOp("gethelloOp", "gethelloOpreq",
@@ -260,8 +260,8 @@ void subGetOp()
 
 	redisA.unsubClientGetOp("hello");
 	getchar();
-	redisA.subsClientGetOpSimple("hello", getCBA);
-	redisA.subsClientGetOpSimple("hello123", getCBA);
+	redisA.subsClientGetOp("hello", getCBA);
+	redisA.subsClientGetOp("hello123", getCBA);
 	getchar();
 	redisA.unsubClientGetOp("hello");
 	redisA.unsubClientGetOp("hello123");
@@ -298,7 +298,7 @@ void abnormalTest(CRedis_Utils& redis)
 	redis.pull("", nullptr);
 	redis.unpull("");
 
-	redis.subsClientGetOp("", "", "", nullptr);
+	redis.subsClientGetOp("", nullptr);
 	redis.unsubClientGetOp("");
 }
 

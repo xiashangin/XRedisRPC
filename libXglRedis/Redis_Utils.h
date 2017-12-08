@@ -57,9 +57,7 @@ public:
 	void unpull(const char *lpStrKey);					//unpull list, like unsubs
 
 	//业务处理模块
-	void subsClientGetOpSimple(const char *lpStrKey, clientOpCallBack cb);
-	void subsClientGetOp(const char *lpStrKey, const char *reqChlName,
-		const char *heartbeatChnName, clientOpCallBack cb);				//注册监听客户端get key操作
+	void subsClientGetOp(const char *lpStrKey, clientOpCallBack cb);
 	void unsubClientGetOp(const char *lpStrKey);						//注销监听客户端get key操作
 	void stopSubClientGetOp();											//取消监听客户端全部get操作
 

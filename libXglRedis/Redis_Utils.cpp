@@ -413,7 +413,7 @@ void CRedis_Utils::unpull(const char *key)
 	m_pullLock.unlock();
 }
 
-void CRedis_Utils::subsClientGetOpSimple(const char *lpStrKey, clientOpCallBack cb)
+void CRedis_Utils::subsClientGetOp(const char *lpStrKey, clientOpCallBack cb)
 {
 	if (strlen(lpStrKey) == 0 || lpStrKey == nullptr)
 	{
@@ -457,55 +457,6 @@ void CRedis_Utils::subsClientGetOpSimple(const char *lpStrKey, clientOpCallBack 
 	}
 }
 
-void CRedis_Utils::subsClientGetOp(const char *key, const char *reqChlName,
-	const char *heartbeatChnName, clientOpCallBack cb)
-{
-	if (strlen(key) == 0 || key == nullptr
-		|| strlen(reqChlName) == 0 || reqChlName == nullptr
-		|| strlen(heartbeatChnName) == 0 || heartbeatChnName == nullptr)
-	{
-		WARNLOG << "key or reqChlName or heartbeatChnName is null... subs failed!!!";
-		return;
-	}
-	if (cb == nullptr)
-	{
-		WARNLOG << "subsCallback is null... subs failed";
-		return;
-	}
-	if (!m_bIsConnected)
-	{
-		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_lpStrIp
-			<< ", port = " << m_iPort;
-		if (!connect(m_lpStrIp.c_str(), m_iPort, m_bNeedSubs))
-		{
-			WARNLOG << "redis服务重新连接失败... ";
-			//std::string rlt = "redis is not connected...";
-			//memcpy(sRlt, rlt.c_str(), rlt.length());
-			return;
-		}
-	}
-	if(m_bNeedSubs)
-	{
-		std::string new_key = genNewKey(key);
-		std::string new_reqChnl = genNewKey(reqChlName);
-		std::string reqChls = new_reqChnl + std::string("*");		//每个客户端对应一个请求队列
-		std::string new_hblist = genNewKey(heartbeatChnName);
-		mapReqCB::iterator it = m_mapReqChnl.find(std::string(reqChls));
-		m_reqLock.lock();
-		if (it == m_mapReqChnl.end())
-		{
-			m_mapReqChnl.insert(std::pair<std::string, pullCallback>(std::string(reqChls), cb));
-			DEBUGLOG << "subsClientGetOp 订阅成功 key = " << reqChls
-				<< ", size = " << m_mapReqChnl.size();
-		}
-		else
-			DEBUGLOG << "subsClientGetOp 该键已经订阅 key = " << reqChls;
-		m_reqLock.unlock();
-		m_redisRPC.subsClientGetOp(new_key.c_str(), new_reqChnl.c_str(), new_hblist.c_str());
-	}
-	else
-		DEBUGLOG << "redis subs function is shutdown!!! needSubs = " << m_bNeedSubs;
-}
 
 void CRedis_Utils::unsubClientGetOp(const char *keys)
 {
