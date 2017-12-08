@@ -58,7 +58,8 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	{
 		return false;
 	}
-	std::string getHeartBeatCmd = R_GET + std::string(" ") + m_mapHBChnl[key];
+	std::string heartBeat = key + std::string(HEARTLIST);			//心跳信令
+	std::string getHeartBeatCmd = R_GET + std::string(" ") + heartBeat;
 	redisReply *reply = (redisReply *)redisCommand(m_redisContext, getHeartBeatCmd.c_str());
 	std::string heartbeat;
 	if (reply->type == REDIS_REPLY_STRING)
@@ -110,7 +111,8 @@ void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 	//远程调用处理key值
 	//将键值塞入对应的请求队列
 	//processKeyLock.lock();
-	std::string requestURL = m_mapReqChnl[key] + m_lpStrRequestID;
+	std::string reqChnl = key + std::string(REQLIST);
+	std::string requestURL = reqChnl + m_lpStrRequestID;
 	std::string pushCmd = std::string(R_PUSH) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
 	if (!redisCommand(m_redisContext, pushCmd.c_str()))
 	{

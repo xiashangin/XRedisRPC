@@ -131,11 +131,11 @@ int CRedis_Utils::get(const char* _key, char* sRlt)
 	std::string new_key = genNewKey(_key);
 	std::string cmd = std::string(R_GET) + std::string(" ") + std::string(new_key);
 	DEBUGLOG << "get cmd = " << cmd;
-	if(!m_redisRPC.isServiceModelAvailable(new_key.c_str()) || !m_redisRPC.isKeySubs(new_key.c_str()))
+	if(!m_redisRPC.isServiceModelAvailable(new_key.c_str()) /*|| !m_redisRPC.isKeySubs(new_key.c_str())*/)
 	{
 		//get失败(nil也表示失败) 该key值不需要处理或者没有可用服务
 		//直接返回数据
-		DEBUGLOG << "no available service or no service subs the key-->" << new_key;
+		DEBUGLOG << "no available service-->" << new_key;
 		bRlt = sendCmd(cmd.c_str(), sRlt);
 		m_getLock.unlock();
 		if (bRlt)
