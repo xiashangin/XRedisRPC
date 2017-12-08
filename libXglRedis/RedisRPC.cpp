@@ -1,15 +1,15 @@
 #include "RedisRPC.h"
 
 //INITIALIZE_EASYLOGGINGPP
-bool CRedisRPC::keyProcessDone = false;
+bool CRedisRPC::m_bKeyProcessDone = false;
 
 CRedisRPC::CRedisRPC(std::string ip, int port)
 {
-	this->ip = ip;
-	this->port = port;
-	if(this->requestID.length() <= 0)
+	this->m_lpStrIp = ip;
+	this->m_iPort = port;
+	if(this->m_lpStrRequestID.length() <= 0)
 	{
-		this->requestID = generate_uuid();
+		this->m_lpStrRequestID = generate_uuid();
 		//el::Configurations conf("easylog.conf");
 		//el::Loggers::reconfigureAllLoggers(conf);
 	}
@@ -33,15 +33,15 @@ bool CRedisRPC::connect(const char* ip, int port)
 {
 	//临时redis客户端，用于订阅结果数据
 	timeval tv = { 3, 500 };
-	context = (redisContext *)redisConnectWithTimeout(
+	m_redisContext = (redisContext *)redisConnectWithTimeout(
 		ip, port, tv);
-	DEBUGLOG << "connect to redis server ip = " << this->ip << ", port = "
-		<< this->port << ", isSubs = ";
+	DEBUGLOG << "connect to redis server ip = " << this->m_lpStrIp << ", port = "
+		<< this->m_iPort << ", isSubs = ";
 
-	if ((NULL == context) || (context->err))
+	if ((NULL == m_redisContext) || (m_redisContext->err))
 	{
-		if (context)
-			ERRORLOG << "connect error:" << context->errstr;
+		if (m_redisContext)
+			ERRORLOG << "connect error:" << m_redisContext->errstr;
 		else
 			ERRORLOG << "connect error: can't allocate redis context.";
 		return false;
@@ -54,12 +54,12 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	//检查是否有可用服务 m_HBChnl
 	DEBUGLOG << "查询是否有可用服务模块...";
 	bool bRlt = false;
-	if (!connect(ip.c_str(), port))
+	if (!connect(m_lpStrIp.c_str(), m_iPort))
 	{
 		return false;
 	}
-	std::string getHeartBeatCmd = R_GET + std::string(" ") + m_HBChnl[key];
-	redisReply *reply = (redisReply *)redisCommand(context, getHeartBeatCmd.c_str());
+	std::string getHeartBeatCmd = R_GET + std::string(" ") + m_mapHBChnl[key];
+	redisReply *reply = (redisReply *)redisCommand(m_redisContext, getHeartBeatCmd.c_str());
 	std::string heartbeat;
 	if (reply->type == REDIS_REPLY_STRING)
 	{
@@ -78,10 +78,10 @@ bool CRedisRPC::isKeySubs(const char *key)
 {
 	//检查该键是否需要进行处理 m_getKeys
 	bool bRlt = false;
-	if(m_HBChnl.size() > 0)
+	if(m_mapHBChnl.size() > 0)
 	{
-		mapHBchnl::iterator it = m_HBChnl.begin();
-		for (; it != m_HBChnl.end(); ++it)
+		mapHBchnl::iterator it = m_mapHBChnl.begin();
+		for (; it != m_mapHBChnl.end(); ++it)
 		{
 			if (keyMatch(std::string(key), it->first))
 			{
@@ -96,13 +96,13 @@ bool CRedisRPC::isKeySubs(const char *key)
 void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 {
 	DEBUGLOG << "开始请求远程服务处理... key = " << key;
-	if (!connect(ip.c_str(), port))
+	if (!connect(m_lpStrIp.c_str(), m_iPort))
 	{
-		WARNLOG << "连接远程服务失败(redis)... ip = " << ip << ", port = " << port;
-		if(context)
+		WARNLOG << "连接远程服务失败(redis)... ip = " << m_lpStrIp << ", port = " << m_iPort;
+		if(m_redisContext)
 		{
-			redisFree(context);
-			context = nullptr;
+			redisFree(m_redisContext);
+			m_redisContext = nullptr;
 		}
 		processKeyLock.unlock(); 
 		return;
@@ -110,32 +110,32 @@ void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 	//远程调用处理key值
 	//将键值塞入对应的请求队列
 	//processKeyLock.lock();
-	std::string requestURL = m_reqChnl[key] + requestID;
+	std::string requestURL = m_mapReqChnl[key] + m_lpStrRequestID;
 	std::string pushCmd = std::string(R_PUSH) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
-	if (!redisCommand(context, pushCmd.c_str()))
+	if (!redisCommand(m_redisContext, pushCmd.c_str()))
 	{
 		WARNLOG << "请求远程服务失败... pushCMD = " << pushCmd;
-		if (context)
+		if (m_redisContext)
 		{
-			redisFree(context);
-			context = nullptr;
+			redisFree(m_redisContext);
+			m_redisContext = nullptr;
 		}
 		processKeyLock.unlock();
 		return;
 	}
 
-	CRedisRPC::keyProcessDone = false;
+	CRedisRPC::m_bKeyProcessDone = false;
 	//等待处理结果，超时返回
 	redisReply *reply;
 	std::string subcmd = std::string(R_SUBS) + std::string(" ") + std::string(R_KEYSPACE) + std::string(key);
 	std::string unsubcmd = std::string(R_UNSUBS) + std::string(" ") + std::string(R_KEYSPACE) + std::string(key);
-	if (!(reply = (redisReply *)redisCommand(context, subcmd.c_str())))
+	if (!(reply = (redisReply *)redisCommand(m_redisContext, subcmd.c_str())))
 	{
 		WARNLOG << "等待远程服务处理结果失败..." << endl;
-		if (context)
+		if (m_redisContext)
 		{
-			redisFree(context);
-			context = nullptr;
+			redisFree(m_redisContext);
+			m_redisContext = nullptr;
 		}
 		processKeyLock.unlock();
 		return;
@@ -143,25 +143,25 @@ void CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 	if (reply != nullptr)
 		freeReplyObject(reply);
 
-	std::string timer_msg = ip + "&_&" + int2str(port) + "&_&" + int2str(timeout) + "&_&" + key;
+	std::string timer_msg = m_lpStrIp + "&_&" + int2str(m_iPort) + "&_&" + int2str(timeout) + "&_&" + key;
 	std::thread thTimer(thTimeout, &timer_msg);
 
 	DEBUGLOG << "等待远程服务处理结果...";
 	processKeyLock.unlock();
-	redisGetReply(context, (void **)&reply);
+	redisGetReply(m_redisContext, (void **)&reply);
 	if (reply != nullptr)
 		freeReplyObject(reply);
-	CRedisRPC::keyProcessDone = true;
+	CRedisRPC::m_bKeyProcessDone = true;
 	thTimer.join();
 	DEBUGLOG << "远程处理完成...";
-	reply = (redisReply *)redisCommand(context, unsubcmd.c_str());
+	//reply = (redisReply *)redisCommand(context, unsubcmd.c_str());
 
-	if (reply != nullptr)
-		freeReplyObject(reply);
-	if (context)
+	//if (reply != nullptr)
+	//	freeReplyObject(reply);
+	if (m_redisContext)
 	{
-		redisFree(context);
-		context = nullptr;
+		redisFree(m_redisContext);
+		m_redisContext = nullptr;
 	}
 }
 
@@ -170,15 +170,22 @@ void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
 {
 	DEBUGLOG << "远程服务注册... keys = " << keys << ", reqChlName = " << reqChlName
 		<< ", heartbeatChnName = " << heartbeatChnName;
-	mapReqchnl::iterator it = m_HBChnl.find(std::string(keys));
-	if (it == m_HBChnl.end())
+	mapReqchnl::iterator it = m_mapHBChnl.find(std::string(keys));
+	if (it == m_mapHBChnl.end())
 	{
+
 //		m_getKeys.insert(std::pair<std::string, getCallback>(std::string(keys), cb));
-		m_reqChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(reqChlName)));
-		m_HBChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(heartbeatChnName)));
+		m_mapReqChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(reqChlName)));
+		m_mapHBChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(heartbeatChnName)));
 		DEBUGLOG << "远程服务注册成功 key = " << keys
 			<< "reqChnl = " << reqChlName
 			<< "hbChnl, = " << heartbeatChnName << endl;
+		if (m_mapHBChnl.size() == 1)	//启动设置心跳信令线程，m_mapReqChnl为空时线程停止
+		{
+			DEBUGLOG << "启动心跳信令设置线程...";
+			std::thread thHeartBeat(thSetHeartBeat, this);
+			thHeartBeat.detach();
+		}
 	}
 	else
 		DEBUGLOG << "该键已经订阅 key = " << keys << endl;
@@ -186,16 +193,15 @@ void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
 
 std::string CRedisRPC::unsubClientGetOp(const char *keys)
 {
-	mapReqchnl::iterator it = m_reqChnl.find(std::string(keys));
+	mapReqchnl::iterator it = m_mapReqChnl.find(std::string(keys));
 	std::string chnlName = "";
-
-	if (it != m_reqChnl.end())
+	if (it != m_mapReqChnl.end())
 	{
-		chnlName = m_reqChnl[keys];
-		m_HBChnl.erase(keys);
-		m_reqChnl.erase(keys);
+		chnlName = m_mapReqChnl[keys];
+		m_mapHBChnl.erase(keys);
+		m_mapReqChnl.erase(keys);
 	}
-	DEBUGLOG << "erase key = " << keys << ", size = " << m_HBChnl.size() << ", " << m_reqChnl.size();
+	DEBUGLOG << "erase key = " << keys << ", size = " << m_mapHBChnl.size() << ", " << m_mapReqChnl.size();
 	return chnlName;
 }
 
@@ -214,7 +220,7 @@ void* CRedisRPC::thTimeout(void *arg)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(timeout / 50));
 		i++;
-		if (keyProcessDone)
+		if (m_bKeyProcessDone)
 			return nullptr;
 	}
 	DEBUGLOG << "远程服务处理超时...，停止等待";
@@ -271,10 +277,45 @@ void* CRedisRPC::thTimeout(void *arg)
 	return nullptr;
 }
 
+void* CRedisRPC::thSetHeartBeat(void *arg)
+{
+	CRedisRPC *self = (CRedisRPC *)arg;
+
+	//设置信令
+	while(1)
+	{
+		if (self->m_mapHBChnl.size() <= 0)
+		{
+			DEBUGLOG << "心跳信令设置线程退出...";
+			return nullptr;
+		}
+
+		mapHBchnl::iterator it_hb = self->m_mapHBChnl.begin();
+		for (; it_hb != self->m_mapHBChnl.end(); ++it_hb)
+		{
+			std::string setHbCmd = std::string(R_SET) + " " + it_hb->second + " " + int2str(time(NULL));
+			if (!self->connect(self->m_lpStrIp.c_str(), self->m_iPort))
+			{
+				WARNLOG << "连接远程服务失败(redis)... ip = " << self->m_lpStrIp << ", port = " << self->m_iPort;
+				if (self->m_redisContext)
+				{
+					redisFree(self->m_redisContext);
+					self->m_redisContext = nullptr;
+				}
+			}
+			if(self->m_redisContext)
+				redisCommand(self->m_redisContext, setHbCmd.c_str());
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+	}
+
+	return nullptr;
+}
+
 void CRedisRPC::clearChnl()
 {
-	if (m_reqChnl.size() > 0)
-		m_reqChnl.clear();
-	if (m_HBChnl.size() > 0)
-		m_HBChnl.clear();
+	if (m_mapReqChnl.size() > 0)
+		m_mapReqChnl.clear();
+	if (m_mapHBChnl.size() > 0)
+		m_mapHBChnl.clear();
 }

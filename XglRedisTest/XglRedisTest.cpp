@@ -30,10 +30,10 @@ static void* multiThread(void *args);
 
 int main(int argc, char const *argv[])
 {
-	CRedis_Utils redis("#@$%%");
+	CRedis_Utils redis("A");
 	redis.connect("192.168.31.217", 6379);
 	//基本操作测试
-	test_set(redis);
+	//test_set(redis);
 	//test_get(redis);
 	//test_push(redis);
 	//test_pop(redis);
@@ -41,7 +41,7 @@ int main(int argc, char const *argv[])
 	//订阅发布测试
 	//subs_test();
 	//pull_test();
-	//subGetOp();
+	subGetOp();
 
 	//abnormalTest(redis);
 
@@ -231,22 +231,40 @@ void pullCBC(const char *key, const char *value)
 void subGetOp()
 {
 	CRedis_Utils redisA("A");
-	CRedis_Utils redisB("B");
+	CRedis_Utils redisB("A");
 	redisA.connect("192.168.31.217", 6379, true);
-	redisB.connect("192.168.31.217", 6379, true);
+	redisB.connect("192.168.31.217", 6379, false);
 	char msg[256];
 	memset(msg, 0, 256);
 
-	redisA.subsClientGetOp("gethelloOp", "gethelloOpreq",
-		"gethelloOphb", getCBA);	//注册
-	redisA.set("gethelloOphb", int2str(time(NULL)).c_str(), 
-		msg);	//定时发送心跳
+	redisA.subsClientGetOpSimple("hello", getCBA);
 
+
+	//redisA.subsClientGetOp("gethelloOp", "gethelloOpreq",
+	//	"gethelloOphb", getCBA);	//注册
+	//redisA.set("gethelloOphb", int2str(time(NULL)).c_str(), 
+	//	msg);	//定时发送心跳
+
+	//memset(msg, 0, 256);
+	//redisA.get("gethelloOp", msg);
+	////redisB.get("gethelloOp", msg);
+	//DEBUGLOG << "get result = " << msg;
+	getchar();
 	memset(msg, 0, 256);
-	redisA.get("gethelloOp", msg);
-	//redisB.get("gethelloOp", msg);
+	redisB.get("hello", msg);
 	DEBUGLOG << "get result = " << msg;
+	getchar();
+	//memset(msg, 0, 256);
+	//redisB.get("hello", msg);
+	//DEBUGLOG << "get result = " << msg;
 
+	redisA.unsubClientGetOp("hello");
+	getchar();
+	redisA.subsClientGetOpSimple("hello", getCBA);
+	redisA.subsClientGetOpSimple("hello123", getCBA);
+	getchar();
+	redisA.unsubClientGetOp("hello");
+	redisA.unsubClientGetOp("hello123");
 	getchar();
 }
 void getCBA(const char *key, const char *value)

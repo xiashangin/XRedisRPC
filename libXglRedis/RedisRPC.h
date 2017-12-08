@@ -53,9 +53,8 @@ extern "C"
 #define R_KEYSPACE	"__keyspace@0__:"
 
 //RPC list
-#define HEARTLIST	"heart_beart_redisRPC_list"
-#define REQLIST		"request_redisRPC_list"
-#define REPLIST		"respond_redisRPC_list"
+#define HEARTLIST	"_heart_beart_list"
+#define REQLIST		"_request_list"
 
 #define HEARTBEATTIMEOUT	10		//10s不更新heartbeat
 #define HEARTBEATINTERVAL	3
@@ -68,31 +67,32 @@ class CRedisRPC
 {
 public:
 	CRedisRPC();
-	CRedisRPC(std::string ip, int port);
+	CRedisRPC(std::string lpStrIp, int iPort);
 	~CRedisRPC();
 
-	bool connect(const char* ip, int port);		//连接redis服务
-	bool isServiceModelAvailable(const char *key);					//检查是否有可用服务
-	bool isKeySubs(const char *key);			//检查key是否需要处理
+	bool connect(const char* lpStrIp, int iPort);		//连接redis服务
+	bool isServiceModelAvailable(const char *lpStrKey);					//检查是否有可用服务
+	bool isKeySubs(const char *lpStrKey);			//检查key是否需要处理
 
-	void processKey(const char *key, int timeout, mutex &processKeyLock);			//处理key, timeout--ms
+	void processKey(const char *lpStrKey, int iTimeout, mutex &processKeyLock);			//处理key, timeout--ms
 
 	//业务处理模块
-	void subsClientGetOp(const char *keys, const char *reqChlName,
+	void subsClientGetOp(const char *lpStrKey, const char *reqChlName,
 		const char *heartbeatChnName);		//注册key以及回调函数
 	std::string unsubClientGetOp(const char *keys);
 	void clearChnl();
 private:
 	static void* thTimeout(void *arg);
+	static void* thSetHeartBeat(void *arg);
 
-	mapReqchnl m_reqChnl;
-	mapHBchnl  m_HBChnl;
+	mapReqchnl m_mapReqChnl;
+	mapHBchnl  m_mapHBChnl;
 
-	std::string ip;				//redis ip
-	int port;					//redis 端口
-	std::string requestID;
-	redisContext *context;
+	std::string m_lpStrIp;				//redis ip
+	int m_iPort;					//redis 端口
+	std::string m_lpStrRequestID;
+	redisContext *m_redisContext;
 
-	static bool keyProcessDone;
+	static bool m_bKeyProcessDone;
 };
 
