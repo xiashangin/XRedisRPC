@@ -63,6 +63,7 @@ public:
 
 private:
 	void close();
+	bool _connect(const std::string & strIp, int iPort);
 	//实现业务模块的数据隔离
 	std::string genNewKey(const std::string & lpStrOldKey);					//封装用户传入的key				
 	std::string getOldKey(const std::string & lpStrNewKey);					//获取客户的原始key
@@ -77,7 +78,10 @@ private:
 
 	void callSubsCB(const std::string & strInKey, const std::string & strInOp);
 	
+	CRedis_Utils(const CRedis_Utils & c);
+
 	redisContext *m_pRedisContext;			//redis同步上下文
+	//std::shared_ptr<redisContext *> m_spRedisContext;
 	redisAsyncContext *m_pRedisAsyncContext;	//redis异步上下文
 	
 #ifdef _WIN32				//redis异步事件库
@@ -99,6 +103,7 @@ private:
 	mutex m_reqLock;
 	mutex m_aeStopLock;
 
+	std::thread thAsyncKeyNotify;
 
 	std::string m_strIp;				//redis ip
 	int m_iPort;						//redis 端口

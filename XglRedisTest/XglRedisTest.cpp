@@ -33,15 +33,18 @@ int main(int argc, char const *argv[])
 	CRedis_Utils redis("Main");
 	redis.connect("192.168.31.217", 6379);
 
+	//std::thread t1;
+	//t1 = thread(multiThread, &redis);
+
 	//基本操作测试
-	//test_set(redis);
+	test_set(redis);
 	//test_get(redis);
 	//test_push(redis);
 	//test_pop(redis);
 
 	//订阅发布测试
 	//subs_test();
-	pull_test();
+	//pull_test();
 	//subGetOp();
 
 	//abnormalTest(redis);
@@ -67,6 +70,7 @@ void test_set(CRedis_Utils& redis)
 			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
 		else
 			ERRORLOG << "set op fail!!! err = " << msg << endl;
+		getchar();
 	}
 }
 void test_get(CRedis_Utils& redis)
@@ -174,8 +178,8 @@ void pull_test()
 	//getchar();
 
 	////只有客户端C收到回调
-	//redisC.push("lhello345", "5", msg);
-	//redisC.push("lhello678", "6", msg);
+	redisC.push("lhello345", "5", msg);
+	redisC.push("lhello678", "6", msg);
 	//getchar();
 }
 void subCBA(const std::string & strKey, const std::string & strValue)
@@ -296,24 +300,22 @@ void getCBA(const std::string & key, const std::string & value)
 //	redis.subsClientGetOp("", nullptr);
 //	redis.unsubClientGetOp("");
 //}
-//
-//void* multiThread(void *args)
-//{
-//	CRedis_Utils *redis = (CRedis_Utils *)args;
-//	stringstream ss;
-//	std::string str;
-//	ss << std::this_thread::get_id();
-//	ss >> str;
-//	std::string key = "hellolist" + str;
-//	char *msg = (char *)malloc(REDIS_BUF_SIZE);
-//	for (int i = 0; i < 10; ++i)
-//	{
-//		memset(msg, 0, REDIS_BUF_SIZE);
-//		if (redis->pop(key.c_str(), msg) >= 0)
-//			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
-//		else
-//			ERRORLOG << "set op fail!!! err = " << msg << endl;
-//	}
-//	free(msg);
-//	return nullptr;
-//}
+
+void* multiThread(void *args)
+{
+	CRedis_Utils *redis = (CRedis_Utils *)args;
+	stringstream ss;
+	std::string str;
+	ss << std::this_thread::get_id();
+	ss >> str;
+	std::string key = "hellolist" + str;
+	std::string msg;
+	for (int i = 0; i < 10; ++i)
+	{
+		if (redis->pop(key.c_str(), msg) >= 0)
+			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
+		else
+			ERRORLOG << "set op fail!!! err = " << msg << endl;
+	}
+	return nullptr;
+}

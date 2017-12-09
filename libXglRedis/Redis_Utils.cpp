@@ -26,28 +26,18 @@ bool CRedis_Utils::connect(const std::string & strIp, int port, bool isSubs)
 	this->m_iPort = port;
 	this->m_bNeedSubs = isSubs;
 	m_redisRPC = CRedisRPC(strIp, port);
-	timeval t = { 1, 500 };
 
 	//连接redis服务
 	DEBUGLOG << "connect to redis server ip = " << this->m_strIp << ", port = " 
 		<< this->m_iPort << ", isSubs = " << this->m_bNeedSubs;
-	m_pRedisContext = (redisContext *)redisConnectWithTimeout(
-		strIp.c_str(), port, t);
-	if ((NULL == m_pRedisContext) || (m_pRedisContext->err))
-	{
-		if (m_pRedisContext)
-			ERRORLOG << "connect error:" << m_pRedisContext->errstr;
-		else
-			ERRORLOG << "connect error: can't allocate redis context.";
+	if (!_connect(strIp, port))
 		return false;
-	}
 	
 	//订阅redis键空间通知
 	if(m_bNeedSubs)
 	{
 		DEBUGLOG << "subscribe redis keyspace notification!!!";
-		thread thAsyncSubALL(CRedis_Utils::thAsyncSubsAll, this);
-		thAsyncSubALL.detach();
+		thAsyncKeyNotify = std::thread(CRedis_Utils::thAsyncSubsAll, this);
 	}
 	this->m_bIsConnected = true;		//连接成功
 	return true;
@@ -117,7 +107,7 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp 
 			<< ", port = " << m_iPort;
-		if(!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if(!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			strOutResult = "redis is not connected...";
@@ -163,7 +153,7 @@ bool CRedis_Utils::set(const std::string & strInKey, const std::string & strInVa
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			strOutResult = "redis is not connected...";
@@ -191,7 +181,7 @@ bool CRedis_Utils::push(const std::string & strInListName, const std::string & s
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			strOutResult = "redis is not connected...";
@@ -217,7 +207,7 @@ int CRedis_Utils::pop(const std::string & strInListName, std::string & strOutRes
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			strOutResult = "redis is not connected...";
@@ -249,7 +239,7 @@ void CRedis_Utils::subs(const std::string & strInKey, subsCallback cb)
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			return;
@@ -285,7 +275,7 @@ void CRedis_Utils::unsubs(const std::string & strInKey)
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			return;
@@ -317,7 +307,7 @@ void CRedis_Utils::pull(const std::string & strInKey, pullCallback cb)
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			return;
@@ -353,7 +343,7 @@ void CRedis_Utils::unpull(const std::string & strInKey)
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			return;
@@ -384,7 +374,7 @@ void CRedis_Utils::subsClientGetOp(const std::string & strInKey, clientOpCallBac
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			return;
@@ -423,7 +413,7 @@ void CRedis_Utils::unsubClientGetOp(const std::string & strInKey)
 	{
 		DEBUGLOG << "redis 服务尚未连接...尝试重新连接... ip = " << m_strIp
 			<< ", port = " << m_iPort;
-		if (!connect(m_strIp.c_str(), m_iPort, m_bNeedSubs))
+		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG << "redis服务重新连接失败... ";
 			return;
@@ -458,12 +448,12 @@ void CRedis_Utils::close()
 {
 	DEBUGLOG << "close redis connection ip = " << this->m_strIp << ", port = "
 		<< this->m_iPort << ", clientID-->" << m_strClientId;
-	std::this_thread::sleep_for(std::chrono::milliseconds(300));	//防止程序退出过快，导致异常。异步回调函数仍在运行...
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));	//防止程序退出过快，导致异常。异步回调函数仍在运行...
 	if (m_bNeedSubs)
 	{
-		stopSubClientGetOp();
+		//stopSubClientGetOp();
 		if (m_pRedisAsyncContext) { 
-			m_aeStopLock.lock(); 
+			//m_aeStopLock.lock(); 
 			redisAsyncDisconnect(m_pRedisAsyncContext);
 			//redisAsyncFree(m_pRedisAsyncContext);
 			//m_pRedisAsyncContext = nullptr;
@@ -478,7 +468,9 @@ void CRedis_Utils::close()
 		event_base_free(m_base);
 		m_base = nullptr;
 #endif
-		m_aeStopLock.unlock();
+		if(thAsyncKeyNotify.joinable())
+			thAsyncKeyNotify.join();
+		//m_aeStopLock.unlock();
 		}
 	}
 	if (m_pRedisContext != nullptr)
@@ -486,9 +478,25 @@ void CRedis_Utils::close()
 		redisFree(m_pRedisContext);
 		m_pRedisContext = nullptr;
 	}
-
 }
 
+
+bool CRedis_Utils::_connect(const std::string & strIp, int port)
+{
+	timeval t = { 1, 500 };
+	m_pRedisContext = (redisContext *)redisConnectWithTimeout(
+		strIp.c_str(), port, t);
+	if ((NULL == m_pRedisContext) || (m_pRedisContext->err))
+	{
+		if (m_pRedisContext)
+			ERRORLOG << "connect error:" << m_pRedisContext->errstr;
+		else
+			ERRORLOG << "connect error: can't allocate redis context.";
+		return false;
+	}
+	m_bIsConnected = true;
+	return true;
+}
 
 std::string CRedis_Utils::genNewKey(const std::string & old_key)
 {
@@ -506,34 +514,34 @@ std::string CRedis_Utils::getOldKey(const std::string & new_key)
 bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutResult)
 {
 	bool bRlt = false;
+	//m_aeStopLock.lock();
 	redisReply *pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());  //执行INFO命令
-	
+	//m_aeStopLock.unlock();
 	//错误处理!!!
 	if (!pRedisReply)
 	{
 		WARNLOG << "redis cmd = " << strInCmd << ", err = " << m_pRedisContext->errstr
 			<< ", try to reconnect...";
 		m_bIsConnected = false;
-		redisFree(m_pRedisContext);
-		connect(m_strIp.c_str(), m_iPort);
+		_connect(m_strIp, m_iPort);
 		pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());
 		if (pRedisReply)
 		{
 			if (replyCheck(pRedisReply, strOutResult))
 				bRlt = true;
 			freeReplyObject(pRedisReply);
+			//m_bIsConnected = true;
 			return bRlt;
 		}
-		m_bIsConnected = false;
+		//m_bIsConnected = false;
 		ERRORLOG << "Error send cmd[" << m_pRedisContext->err << ":" << m_pRedisContext->errstr << "]";
-		//memcpy(strOutResult, m_pRedisContext->errstr, strlen(m_pRedisContext->errstr));
 		strOutResult = m_pRedisContext->errstr;
 		return false;
 	}
 	if (replyCheck(pRedisReply, strOutResult))
 		bRlt = true;
 	freeReplyObject(pRedisReply);
-//	DEBUGLOG << "redis cmd = " << cmd << ", rlt = " << bRlt;
+	DEBUGLOG << "redis cmd = " << strInCmd << ", rlt = " << bRlt;
 	return bRlt;
 }
 
