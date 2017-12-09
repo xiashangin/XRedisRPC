@@ -9,9 +9,9 @@
 //#endif // _WIN32
 
 
-typedef void(*subsCallback)(const char *lpStrKey, const char *lpStrValue);
-typedef void(*pullCallback)(const char *lpStrKey, const char *lpStrValue);
-typedef void(*clientOpCallBack)(const char *lpStrKey, const char *lpStrValue);
+typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
+typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
+typedef void(*clientOpCallBack)(const std::string & strKey, const std::string & strValue);
 
 typedef std::map<std::string, subsCallback> mapSubsCB;		//subkey-->subfunc
 typedef std::map<std::string, pullCallback> mapPullCB;		//pullkey-->subfunc
@@ -20,7 +20,7 @@ typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
 class CRedis_Utils
 {
 public:
-	CRedis_Utils(std::string lpStrClientID);
+	CRedis_Utils(std::string strClientID);
 	~CRedis_Utils();
 
 	//客户端基本操作函数
@@ -29,7 +29,7 @@ public:
 		false：不使用redis的键空间通知功能，即subs、pull、subsClientGetOp等接口不起作用
 		true：启用redis的键空间通知功能
 	*/
-	bool connect(const char* lpStrIp, int iPort, bool bNeedSubs = false);		//连接redis服务并订阅redis键空间通知
+	bool connect(const std::string & strIp, int iPort, bool bNeedSubs = false);		//连接redis服务并订阅redis键空间通知
 	void disconnect();
 
 	//redis基本操作
@@ -45,20 +45,20 @@ public:
 			true：操作成功，结果通过lpStrRlt查看，一般为OK
 			false：操作失败，结果通过lpStrRlt查看
 	  */ 
-	int  get(const char* lpStrKey, char *lpStrRlt);		
-	bool set(const char* lpStrKey, const char* lpStrValue, char *lpStrRlt);
-	bool push(const char* lpStrListName, const char* lpStrValue, char *lpStrRlt);
-	int  pop(const char* lpStrListName, char *lpStrRlt);
+	int  get(const std::string & strInKey, std::string & strOutResult);
+	bool set(const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
+	bool push(const std::string & strInListName, const std::string & strInValue, std::string & strOutResult);
+	int  pop(const std::string & strInListName, std::string & strOutResult);
 
 	//redis订阅功能
-	void subs(const char *lpStrKey, subsCallback cb);	//subscribe channel
-	void unsubs(const char *lpStrKey);					//unsubscribe channel
-	void pull(const char *lpStrKey, pullCallback cb);	//pull list
-	void unpull(const char *lpStrKey);					//unpull list, like unsubs
+	void subs(const std::string & strInKey, subsCallback cb);	//subscribe channel
+	void unsubs(const std::string & strInKey);					//unsubscribe channel
+	void pull(const std::string & strInKey, pullCallback cb);	//pull list
+	void unpull(const std::string & strInKey);					//unpull list, like unsubs
 
 	//业务处理模块
-	void subsClientGetOp(const char *lpStrKey, clientOpCallBack cb);
-	void unsubClientGetOp(const char *lpStrKey);						//注销监听客户端get key操作
+	void subsClientGetOp(const std::string & strInKey, clientOpCallBack cb);
+	void unsubClientGetOp(const std::string & strInKey);						//注销监听客户端get key操作
 	void stopSubClientGetOp();											//取消监听客户端全部get操作
 
 private:
@@ -66,8 +66,8 @@ private:
 	//实现业务模块的数据隔离
 	std::string genNewKey(const std::string & lpStrOldKey);					//封装用户传入的key				
 	std::string getOldKey(const std::string & lpStrNewKey);					//获取客户的原始key
-	bool sendCmd(const char *lpStrCmd, char *lpStrRlt);				//发送redis命令
-	bool replyCheck(redisReply *rRedisReply, char *lpStrReply);		//解析redis应答消息
+	bool sendCmd(const std::string & strInCmd, std::string & strOutResult);		//发送redis命令
+	bool replyCheck(redisReply *rRedisReply, std::string & strOutResult);		//解析redis应答消息
 
 	static void* thAsyncSubsAll(void *arg);							//redis键空间通知
 
@@ -75,7 +75,7 @@ private:
 	static void disconnectCallback(const redisAsyncContext *c, int iStatus);
 	static void subsAllCallback(redisAsyncContext *c, void *r, void *data);
 
-	void callSubsCB(const char *lpStrKey, const char *lpsStrKeyOp);
+	void callSubsCB(const std::string & strInKey, const std::string & strInOp);
 	
 	redisContext *m_pRedisContext;			//redis同步上下文
 	redisAsyncContext *m_pRedisAsyncContext;	//redis异步上下文
@@ -97,6 +97,8 @@ private:
 	mutex m_subsLock;
 	mutex m_pullLock;
 	mutex m_reqLock;
+	mutex m_aeStopLock;
+
 
 	std::string m_strIp;				//redis ip
 	int m_iPort;						//redis 端口
