@@ -67,9 +67,9 @@ void test_set(CRedis_Utils& redis)
 		std::string key_ = "!@##%%$" + int2str(i);
 		std::string value = "!@##%%$" + int2str(i);
 		if (redis.set(key_, value, msg))
-			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
+			DEBUGLOG("set op succ!!! msg = " << msg.c_str());
 		else
-			ERRORLOG << "set op fail!!! err = " << msg << endl;
+			ERRORLOG("set op fail!!! err = " << msg.c_str());
 		getchar();
 	}
 }
@@ -81,11 +81,11 @@ void test_get(CRedis_Utils& redis)
 		std::string key_ = "hellosadsdasa";
 		int size = redis.get(key_, msg);
 		if (size > 0)
-			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
+			DEBUGLOG("set op succ!!! msg = " << msg.c_str());
 		else if (size == 0)
-			DEBUGLOG << "no data... key = " << key_ << endl;
+			DEBUGLOG("no data... key = " << key_.c_str());
 		else
-			ERRORLOG << "get op fail!!! err = " << msg << endl;
+			ERRORLOG("get op fail!!! err = " << msg.c_str());
 	}
 }
 void test_push(CRedis_Utils& redis)
@@ -96,9 +96,9 @@ void test_push(CRedis_Utils& redis)
 		std::string key_ = "hello";
 		std::string value = "world" + int2str(i);
 		if (redis.push(key_, value, msg))
-			DEBUGLOG << "push op succ!!! size = " << msg << endl;
+			DEBUGLOG("push op succ!!! size = " << msg.c_str());
 		else
-			ERRORLOG << "push op fail!!! err = " << msg << endl;
+			ERRORLOG("push op fail!!! err = " << msg.c_str());
 	}
 }
 void test_pop(CRedis_Utils& redis)
@@ -109,11 +109,11 @@ void test_pop(CRedis_Utils& redis)
 		std::string key_ = "hello";
 		int size = redis.pop(key_, msg);
 		if (size > 0)
-			DEBUGLOG << "pop op succ!!! value = " << msg << endl;
+			DEBUGLOG("pop op succ!!! value = " << msg.c_str());
 		else if (size == 0)
-			DEBUGLOG << "no data... key = " << key_ << endl;
+			DEBUGLOG("no data... key = " << key_.c_str());
 		else
-			ERRORLOG << "pop op fail!!! err = " << msg << endl;
+			ERRORLOG("pop op fail!!! err = " << msg.c_str());
 	}
 }
 
@@ -184,51 +184,51 @@ void pull_test()
 }
 void subCBA(const std::string & strKey, const std::string & strValue)
 {
-	DEBUGLOG << "clientA got subs msg!!!";
+	DEBUGLOG("clientA got subs msg!!!");
 	if (strKey.length() == 0)
-		DEBUGLOG << "key = " << strKey << ", was deleted..." << endl;
+		DEBUGLOG("key = " << strKey.c_str() << ", was deleted...");
 	else
-		DEBUGLOG << "got subcb msg, key = " << strKey << ", value = " << strValue << endl;
+		DEBUGLOG("got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str());
 }
 void subCBB(const std::string & strKey, const std::string & strValue)
 {
-	DEBUGLOG << "clientB got subs msg!!!";
+	DEBUGLOG("clientB got subs msg!!!");
 	if (strKey.length() == 0)
-		DEBUGLOG << "key = " << strKey << ", was deleted..." << endl;
+		DEBUGLOG("key = " << strKey.c_str() << ", was deleted...");
 	else
-		DEBUGLOG << "got subcb msg, key = " << strKey << ", value = " << strValue << endl;
+		DEBUGLOG("got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str());
 }
 void subCBC(const std::string & strKey, const std::string & strValue)
 {
-	DEBUGLOG << "clientC got subs msg!!!";
+	DEBUGLOG("clientC got subs msg!!!");
 	if (strKey.length() == 0)
-		DEBUGLOG << "key = " << strKey << ", was deleted..." << endl;
+		DEBUGLOG("key = " << strKey.c_str() << ", was deleted...");
 	else
-		DEBUGLOG << "got subcb msg, key = " << strKey << ", value = " << strValue << endl;
+		DEBUGLOG("got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str());
 }
 void pullCBA(const std::string & strKey, const std::string & strValue)
 {
-	DEBUGLOG << "clientA got pull msg!!!";
+	DEBUGLOG("clientA got pull msg!!!");
 	if (strKey.length() == 0)
-		DEBUGLOG << "key = " << strKey << ", was deleted..." << endl;
+		DEBUGLOG("key = " << strKey.c_str() << ", was deleted...");
 	else
-		DEBUGLOG << "got pullcb msg, key = " << strKey << ", value = " << strValue << endl;
+		DEBUGLOG("got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str());
 }
 void pullCBB(const std::string & strKey, const std::string & strValue)
 {
-	DEBUGLOG << "clientB got pull msg!!!";
+	DEBUGLOG("clientB got pull msg!!!");
 	if (strKey.length() == 0)
-		DEBUGLOG << "key = " << strKey << ", was deleted..." << endl;
+		DEBUGLOG("key = " << strKey.c_str() << ", was deleted...");
 	else
-		DEBUGLOG << "got pullcb msg, key = " << strKey << ", value = " << strValue << endl;
+		DEBUGLOG("got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str());
 }
 void pullCBC(const std::string & strKey, const std::string & strValue)
 {
-	DEBUGLOG << "clientC got pull msg!!!";
+	DEBUGLOG("clientC got pull msg!!!");
 	if (strKey.length() == 0)
-		DEBUGLOG << "key = " << strKey << ", was deleted..." << endl;
+		DEBUGLOG("key = " << strKey.c_str() << ", was deleted...");
 	else
-		DEBUGLOG << "got pullcb msg, key = " << strKey << ", value = " << strValue << endl;
+		DEBUGLOG("got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str());
 }
 
 void subGetOp()
@@ -253,7 +253,7 @@ void subGetOp()
 	//DEBUGLOG << "get result = " << msg;
 	getchar();
 	redisB.get("hello", msg);
-	DEBUGLOG << "get result = " << msg;
+	DEBUGLOG("get result = " << msg.c_str());
 	getchar();
 	//memset(msg, 0, 256);
 	//redisB.get("hello", msg);
@@ -270,7 +270,7 @@ void subGetOp()
 }
 void getCBA(const std::string & key, const std::string & value)
 {
-	DEBUGLOG << "clientA got get msg!!!";
+	DEBUGLOG("clientA got get msg!!!");
 	CRedis_Utils redis("A");
 	redis.connect("192.168.31.217", 6379);
 	std::string msg;	//数据处理，处理完成之后调用set接口更新数据
@@ -313,9 +313,9 @@ void* multiThread(void *args)
 	for (int i = 0; i < 10; ++i)
 	{
 		if (redis->pop(key.c_str(), msg) >= 0)
-			DEBUGLOG << "set op succ!!! msg = " << msg << endl;
+			DEBUGLOG("set op succ!!! msg = " << msg.c_str());
 		else
-			ERRORLOG << "set op fail!!! err = " << msg << endl;
+			ERRORLOG("set op fail!!! err = " << msg.c_str());
 	}
 	return nullptr;
 }

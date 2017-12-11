@@ -20,6 +20,9 @@ extern "C" {
 #include "include/uuid/uuid4.h"
 }
 
+#include "include/log/MyLogger.h"
+
+extern CMyLogger *g_ECGLogger;
 
 template<class T>
 std::string num2str ( const T num );

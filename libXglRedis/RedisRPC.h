@@ -31,11 +31,19 @@ extern "C"
 //#define DEBUGLOG LOG(DEBUG)<<__FUNCTION__<<"***"
 //#define ERRORLOG LOG(ERROR)<<__FUNCTION__<<"***"
 
-#define INFOLOG cout<<endl<<time2str(time(NULL))<<"[info]"<<__FUNCTION__<<"***"
-#define TRACELOG cout<<endl<<time2str(time(NULL))<<"[trace]"<<__FUNCTION__<<"***"
-#define WARNLOG cout<<endl<<time2str(time(NULL))<<"[warn]"<<__FUNCTION__<<"***"
-#define DEBUGLOG cout<<endl<<time2str(time(NULL))<<"[debug]"<<__FUNCTION__<<"***"
-#define ERRORLOG cout<<endl<<time2str(time(NULL))<<"[error]"<<__FUNCTION__<<"***"
+//#define INFOLOG cout<<endl<<time2str(time(NULL))<<"[info]"<<__FUNCTION__<<"***"
+//#define TRACELOG cout<<endl<<time2str(time(NULL))<<"[trace]"<<__FUNCTION__<<"***"
+//#define WARNLOG cout<<endl<<time2str(time(NULL))<<"[warn]"<<__FUNCTION__<<"***"
+//#define DEBUGLOG cout<<endl<<time2str(time(NULL))<<"[debug]"<<__FUNCTION__<<"***"
+//#define ERRORLOG cout<<endl<<time2str(time(NULL))<<"[error]"<<__FUNCTION__<<"***"
+//#define FATALLOG cout<<endl<<time2str(time(NULL))<<"[fatal]"<<__FUNCTION__<<"***"
+
+#define INFOLOG(inf) LOG4CPLUS_INFO(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+#define TRACELOG(inf) LOG4CPLUS_TRACE(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+#define DEBUGLOG(inf) LOG4CPLUS_DEBUG(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+#define WARNLOG(inf) LOG4CPLUS_WARN(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+#define ERRORLOG(inf) LOG4CPLUS_ERROR(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+#define FATALLOG(inf) LOG4CPLUS_FATAL(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
 
 #define REDIS_BUF_SIZE 1024 * 2
 

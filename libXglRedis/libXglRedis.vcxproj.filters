@@ -44,6 +44,9 @@
     <ClCompile Include="include\uuid\uuid4.cpp">
       <Filter>uuid</Filter>
     </ClCompile>
+    <ClCompile Include="include\log\MyLogger.cpp">
+      <Filter>log</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\uuid\uuid4.h">
@@ -57,6 +60,9 @@
     </ClInclude>
     <ClInclude Include="RedisRPC.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\log\MyLogger.h">
+      <Filter>log</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
