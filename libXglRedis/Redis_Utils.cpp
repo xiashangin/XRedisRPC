@@ -464,12 +464,15 @@ void CRedis_Utils::close()
 		m_loop = nullptr;
 		DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());
 #else
-		//event_base_loopbreak(base);
-		event_base_free(m_base);
-		m_base = nullptr;
+		event_base_loopbreak(base);
+		DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());
+		//event_base_free(m_base);
+		//m_base = nullptr;
 #endif
+		DEBUGLOG("wait for asyncThread quit... id --> " << m_strClientId.c_str());
 		if(thAsyncKeyNotify.joinable())
 			thAsyncKeyNotify.join();
+		DEBUGLOG("asyncThread quit... id --> " << m_strClientId.c_str());
 		//m_aeStopLock.unlock();
 		}
 	}
@@ -683,6 +686,8 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 	m_reqLock.lock();
 	if (this->m_mapReqChnl.size() > 0)	//请求队列
 	{ 
+		DEBUGLOG("key = " << strInKey.c_str() << ", op = " << strInKeyOp.c_str()
+			<< ", get reqlist...");
 		mapReqCB::iterator it_req = m_mapReqChnl.begin();
 		for (; it_req != m_mapReqChnl.end(); ++it_req)
 		{
@@ -707,6 +712,7 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 					else
 						WARNLOG("获取请求队列信息失败... popCmd = " << getCmd.c_str()
 							<< ", errstr = " << sRlt.c_str());
+
 					it_req->second(getOldKey(get_key), get_value);
 				}
 			}

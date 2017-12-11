@@ -66,6 +66,7 @@ extern "C"
 
 #define HEARTBEATTIMEOUT	10		//10s²»¸üÐÂheartbeat
 #define HEARTBEATINTERVAL	3
+#define GET_TIMEOUT 10000
 
 
 typedef std::map<std::string, std::string>		mapReqchnl;	//getkey-->requestChnl
@@ -92,6 +93,7 @@ private:
 	static void* thTimeout(void *arg);
 	static void* thSetHeartBeat(void *arg);
 	static std::mutex hbLock;
+	static std::thread thHeartBeat;
 	mapReqchnl m_mapReqChnl;
 	mapHBchnl  m_mapHBChnl;
 

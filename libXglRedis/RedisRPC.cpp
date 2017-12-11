@@ -3,6 +3,7 @@
 //INITIALIZE_EASYLOGGINGPP
 bool CRedisRPC::m_bKeyProcessDone = false;
 std::mutex CRedisRPC::hbLock;
+std::thread CRedisRPC::thHeartBeat;
 
 CRedisRPC::CRedisRPC(std::string ip, int port)
 {
@@ -186,8 +187,10 @@ void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
 		if (m_mapHBChnl.size() == 1)	//启动设置心跳信令线程，m_mapReqChnl为空时线程停止
 		{
 			DEBUGLOG("启动心跳信令设置线程...");
-			std::thread thHeartBeat(thSetHeartBeat, this);
-			thHeartBeat.detach();
+			//std::thread thHeartBeat(thSetHeartBeat, this);
+			//thHeartBeat.detach();
+			if (!thHeartBeat.joinable())
+				thHeartBeat = std::thread(thSetHeartBeat, this);
 		}
 	}
 	else
@@ -207,6 +210,12 @@ std::string CRedisRPC::unsubClientGetOp(const char *keys)
 	}
 	hbLock.unlock();
 	DEBUGLOG("erase key = " << keys << ", size = " << m_mapHBChnl.size() << ", " << m_mapReqChnl.size());
+	if(m_mapHBChnl.size() <= 0)
+	{
+		DEBUGLOG("wait for thHeartBeat quit... size = " << m_mapHBChnl.size());
+		thHeartBeat.join();
+		DEBUGLOG("thHeartBeat quit... ");
+	}
 	return chnlName;
 }
 
@@ -295,7 +304,7 @@ void* CRedisRPC::thSetHeartBeat(void *arg)
 			hbLock.unlock();
 			return nullptr;
 		}
-
+		DEBUGLOG("m_mapHBChnl size = " << self->m_mapHBChnl.size());
 		mapHBchnl::iterator it_hb = self->m_mapHBChnl.begin();
 		for (; it_hb != self->m_mapHBChnl.end(); ++it_hb)
 		{
@@ -313,7 +322,7 @@ void* CRedisRPC::thSetHeartBeat(void *arg)
 				redisCommand(self->m_redisContext, setHbCmd.c_str());
 		}
 		hbLock.unlock();
-		std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(GET_TIMEOUT / 2));
 	}
 
 	return nullptr;
@@ -324,7 +333,17 @@ void CRedisRPC::clearChnl()
 	if (m_mapReqChnl.size() > 0)
 		m_mapReqChnl.clear();
 	hbLock.lock();
+	bool needWait = false;
 	if (m_mapHBChnl.size() > 0)
+	{
+		needWait = true;
 		m_mapHBChnl.clear();
+	}
 	hbLock.unlock();
+	if(needWait)
+	{
+		DEBUGLOG("wait for thHeartBeat quit... size = " << m_mapHBChnl.size());
+		thHeartBeat.join();
+		DEBUGLOG("thHeartBeat quit... ");
+	}
 }

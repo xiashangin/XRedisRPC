@@ -8,7 +8,6 @@
 //#include <sys/time.h>
 //#endif // _WIN32
 
-#define GET_TIMEOUT 5000
 
 typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
 typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
