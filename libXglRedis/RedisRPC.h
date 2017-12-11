@@ -83,7 +83,6 @@ public:
 	bool isKeySubs(const char *lpStrKey);			//检查key是否需要处理
 
 	void processKey(const char *lpStrKey, int iTimeout, mutex &processKeyLock);			//处理key, timeout--ms
-
 	//业务处理模块
 	void subsClientGetOp(const char *lpStrKey, const char *reqChlName,
 		const char *heartbeatChnName);		//注册key以及回调函数

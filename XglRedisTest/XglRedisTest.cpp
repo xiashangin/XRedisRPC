@@ -240,14 +240,22 @@ void subGetOp()
 	std::string msg;
 
 	redisA.subsClientGetOp("hello", getCBA);
-	redisA.get("hello", msg);
-	redisB.get("hello", msg);
-	DEBUGLOG("get result = " << msg.c_str());
+	vector<std::thread> thGroup;
+	for (int i = 0; i < THREADNUM; ++i)
+		thGroup.push_back(std::thread(multiThread, &redisA));
+	for (int i = 0; i < THREADNUM; ++i)
+		thGroup[i].join();
+	//redisA.get("hello", msg);
+	//DEBUGLOG("get result = " << msg.c_str());
+	//msg.clear();
+	//redisA.get("hello", msg);
+	//redisB.get("hello", msg);
+	//DEBUGLOG("get result = " << msg.c_str());
 	//redisA.unsubClientGetOp("hello");
-	redisA.subsClientGetOp("hello", getCBA);
-	redisA.subsClientGetOp("hello123", getCBA);
-	redisA.unsubClientGetOp("hello");
-	redisA.unsubClientGetOp("hello123");
+	//redisA.subsClientGetOp("hello", getCBA);
+	//redisA.subsClientGetOp("hello123", getCBA);
+	//redisA.unsubClientGetOp("hello");
+	//redisA.unsubClientGetOp("hello123");
 	//getchar();
 }
 void getCBA(const std::string & key, const std::string & value)
@@ -256,6 +264,7 @@ void getCBA(const std::string & key, const std::string & value)
 	CRedis_Utils redis("A");
 	redis.connect("192.168.31.217", 6379);
 	std::string msg;	//数据处理，处理完成之后调用set接口更新数据
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	//通知客户端处理完成
 	if (value.length() == 0)
 		redis.set(key, "nil", msg);
@@ -286,18 +295,26 @@ void getCBA(const std::string & key, const std::string & value)
 void* multiThread(void *args)
 {
 	CRedis_Utils *redis = (CRedis_Utils *)args;
+
 	stringstream ss;
-	std::string str;
+	std::string strPid;
 	ss << std::this_thread::get_id();
-	ss >> str;
-	std::string key = "hellolist" + str;
+	ss >> strPid;
+
+	DEBUGLOG("getOp pid = " << strPid.c_str());
 	std::string msg;
-	for (int i = 0; i < 10; ++i)
-	{
-		if (redis->pop(key.c_str(), msg) >= 0)
-			DEBUGLOG("set op succ!!! msg = " << msg.c_str());
-		else
-			ERRORLOG("set op fail!!! err = " << msg.c_str());
-	}
+	redis->get("hello", msg);
+	DEBUGLOG("get result = " << msg.c_str());
+
+
+	//std::string key = "hellolist" + strPid;
+	//std::string msg;
+	//for (int i = 0; i < 10; ++i)
+	//{
+	//	if (redis->pop(key.c_str(), msg) >= 0)
+	//		DEBUGLOG("set op succ!!! msg = " << msg.c_str());
+	//	else
+	//		ERRORLOG("set op fail!!! err = " << msg.c_str());
+	//}
 	return nullptr;
 }

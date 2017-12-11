@@ -8,6 +8,7 @@
 //#include <sys/time.h>
 //#endif // _WIN32
 
+#define GET_TIMEOUT 5000
 
 typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
 typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
@@ -44,7 +45,7 @@ public:
 		返回值说明：
 			true：操作成功，结果通过lpStrRlt查看，一般为OK
 			false：操作失败，结果通过lpStrRlt查看
-	  */ 
+	*/ 
 	int  get(const std::string & strInKey, std::string & strOutResult);
 	bool set(const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
 	bool push(const std::string & strInListName, const std::string & strInValue, std::string & strOutResult);

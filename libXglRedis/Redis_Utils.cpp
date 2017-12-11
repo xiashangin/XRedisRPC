@@ -134,7 +134,7 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 
 	//远程调用处理数据
 	DEBUGLOG("process the key before return.   key-->" << new_key.c_str());
-	m_redisRPC.processKey(new_key.c_str(), 5000, m_getLock);		
+	m_redisRPC.processKey(new_key.c_str(), GET_TIMEOUT, m_getLock);
 	DEBUGLOG("process the key, job done.   key-->" << new_key.c_str());
 	
 	//返回数据
@@ -683,7 +683,6 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 	m_reqLock.lock();
 	if (this->m_mapReqChnl.size() > 0)	//请求队列
 	{ 
-		size_t s = m_mapReqChnl.size(); 
 		mapReqCB::iterator it_req = m_mapReqChnl.begin();
 		for (; it_req != m_mapReqChnl.end(); ++it_req)
 		{
@@ -696,6 +695,7 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 					if (sendCmd(popCmd, sRlt))		//获取请求队列中的值
 					{
 						get_key = sRlt;
+						sRlt.clear();
 						getCmd.clear();
 						getCmd = R_GET + std::string(" ") + get_key;
 						if (sendCmd(getCmd.c_str(), sRlt))		//获取对应的值
