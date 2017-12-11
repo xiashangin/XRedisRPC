@@ -451,7 +451,7 @@ void CRedis_Utils::close()
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));	//防止程序退出过快，导致异常。异步回调函数仍在运行...
 	if (m_bNeedSubs)
 	{
-		//stopSubClientGetOp();
+		stopSubClientGetOp();
 		if (m_pRedisAsyncContext) { 
 			//m_aeStopLock.lock(); 
 			redisAsyncDisconnect(m_pRedisAsyncContext);

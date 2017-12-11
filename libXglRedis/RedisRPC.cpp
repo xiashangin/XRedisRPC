@@ -2,6 +2,7 @@
 
 //INITIALIZE_EASYLOGGINGPP
 bool CRedisRPC::m_bKeyProcessDone = false;
+std::mutex CRedisRPC::hbLock;
 
 CRedisRPC::CRedisRPC(std::string ip, int port)
 {
@@ -195,14 +196,16 @@ void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
 
 std::string CRedisRPC::unsubClientGetOp(const char *keys)
 {
-	mapReqchnl::iterator it = m_mapReqChnl.find(std::string(keys));
 	std::string chnlName = "";
+	hbLock.lock();
+	mapReqchnl::iterator it = m_mapReqChnl.find(std::string(keys));
 	if (it != m_mapReqChnl.end())
 	{
 		chnlName = m_mapReqChnl[keys];
 		m_mapHBChnl.erase(keys);
 		m_mapReqChnl.erase(keys);
 	}
+	hbLock.unlock();
 	DEBUGLOG("erase key = " << keys << ", size = " << m_mapHBChnl.size() << ", " << m_mapReqChnl.size());
 	return chnlName;
 }
@@ -285,9 +288,11 @@ void* CRedisRPC::thSetHeartBeat(void *arg)
 	//设置信令
 	while(1)
 	{
+		hbLock.lock();
 		if (self->m_mapHBChnl.size() <= 0)
 		{
 			DEBUGLOG("心跳信令设置线程退出...");
+			hbLock.unlock();
 			return nullptr;
 		}
 
@@ -307,6 +312,7 @@ void* CRedisRPC::thSetHeartBeat(void *arg)
 			if(self->m_redisContext)
 				redisCommand(self->m_redisContext, setHbCmd.c_str());
 		}
+		hbLock.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(4000));
 	}
 
@@ -317,6 +323,8 @@ void CRedisRPC::clearChnl()
 {
 	if (m_mapReqChnl.size() > 0)
 		m_mapReqChnl.clear();
+	hbLock.lock();
 	if (m_mapHBChnl.size() > 0)
 		m_mapHBChnl.clear();
+	hbLock.unlock();
 }

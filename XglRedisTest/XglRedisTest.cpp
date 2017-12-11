@@ -37,7 +37,7 @@ int main(int argc, char const *argv[])
 	//t1 = thread(multiThread, &redis);
 
 	//基本操作测试
-	test_set(redis);
+	//test_set(redis);
 	//test_get(redis);
 	//test_push(redis);
 	//test_pop(redis);
@@ -45,7 +45,7 @@ int main(int argc, char const *argv[])
 	//订阅发布测试
 	//subs_test();
 	//pull_test();
-	//subGetOp();
+	subGetOp();
 
 	//abnormalTest(redis);
 
@@ -234,39 +234,21 @@ void pullCBC(const std::string & strKey, const std::string & strValue)
 void subGetOp()
 {
 	CRedis_Utils redisA("A");
-	CRedis_Utils redisB("A");
+	CRedis_Utils redisB("B");
 	redisA.connect("192.168.31.217", 6379, true);
 	redisB.connect("192.168.31.217", 6379);
 	std::string msg;
 
 	redisA.subsClientGetOp("hello", getCBA);
-
-
-	//redisA.subsClientGetOp("gethelloOp", "gethelloOpreq",
-	//	"gethelloOphb", getCBA);	//注册
-	//redisA.set("gethelloOphb", int2str(time(NULL)).c_str(), 
-	//	msg);	//定时发送心跳
-
-	//memset(msg, 0, 256);
-	//redisA.get("gethelloOp", msg);
-	//redisB.get("gethelloOp", msg);
-	//DEBUGLOG << "get result = " << msg;
-	getchar();
+	redisA.get("hello", msg);
 	redisB.get("hello", msg);
 	DEBUGLOG("get result = " << msg.c_str());
-	getchar();
-	//memset(msg, 0, 256);
-	//redisB.get("hello", msg);
-	//DEBUGLOG << "get result = " << msg;
-
-	redisA.unsubClientGetOp("hello");
-	getchar();
+	//redisA.unsubClientGetOp("hello");
 	redisA.subsClientGetOp("hello", getCBA);
 	redisA.subsClientGetOp("hello123", getCBA);
-	getchar();
 	redisA.unsubClientGetOp("hello");
 	redisA.unsubClientGetOp("hello123");
-	getchar();
+	//getchar();
 }
 void getCBA(const std::string & key, const std::string & value)
 {

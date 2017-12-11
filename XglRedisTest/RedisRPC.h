@@ -92,7 +92,7 @@ public:
 private:
 	static void* thTimeout(void *arg);
 	static void* thSetHeartBeat(void *arg);
-
+	static std::mutex hbLock;
 	mapReqchnl m_mapReqChnl;
 	mapHBchnl  m_mapHBChnl;
 
