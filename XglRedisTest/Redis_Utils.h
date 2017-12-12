@@ -51,14 +51,14 @@ public:
 	int  pop(const std::string & strInListName, std::string & strOutResult);
 
 	//redis订阅功能
-	void subs(const std::string & strInKey, subsCallback cb);	//subscribe channel
-	void unsubs(const std::string & strInKey);					//unsubscribe channel
-	void pull(const std::string & strInKey, pullCallback cb);	//pull list
-	void unpull(const std::string & strInKey);					//unpull list, like unsubs
+	bool subs(const std::string & strInKey, subsCallback cb);	//subscribe channel
+	bool unsubs(const std::string & strInKey);					//unsubscribe channel
+	bool pull(const std::string & strInKey, pullCallback cb);	//pull list
+	bool unpull(const std::string & strInKey);					//unpull list, like unsubs
 
 	//业务处理模块
-	void subsClientGetOp(const std::string & strInKey, clientOpCallBack cb);
-	void unsubClientGetOp(const std::string & strInKey);						//注销监听客户端get key操作
+	bool subsClientGetOp(const std::string & strInKey, clientOpCallBack cb);
+	bool unsubClientGetOp(const std::string & strInKey);						//注销监听客户端get key操作
 	void stopSubClientGetOp();											//取消监听客户端全部get操作
 
 private:
@@ -77,7 +77,6 @@ private:
 	static void subsAllCallback(redisAsyncContext *c, void *r, void *data);
 
 	void callSubsCB(const std::string & strInKey, const std::string & strInOp);
-	
 	CRedis_Utils(const CRedis_Utils & c);
 
 	redisContext *m_pRedisContext;			//redis同步上下文
@@ -113,5 +112,6 @@ private:
 	bool m_bNeedSubs;					//是否需要redis订阅功能
 	bool m_bIsConnected;				//连接redis成功标志
 	std::string m_strClientId;			//客户端标志
+	//std::string m_strLastGetKey;
 };
 

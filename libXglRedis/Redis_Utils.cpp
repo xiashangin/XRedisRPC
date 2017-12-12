@@ -3,6 +3,7 @@
 CRedis_Utils::CRedis_Utils(std::string strClientID)
 {
 	this->m_bIsConnected = false;
+	//this->m_strLastGetKey = "";
 	if (strClientID.length() > 0)
 		this->m_strClientId = strClientID;
 	else
@@ -38,6 +39,9 @@ bool CRedis_Utils::connect(const std::string & strIp, int port, bool isSubs)
 	{
 		DEBUGLOG("subscribe redis keyspace notification!!!");
 		thAsyncKeyNotify = std::thread(CRedis_Utils::thAsyncSubsAll, this);
+#ifndef _WIN32
+		thAsyncKeyNotify.detach();
+#endif
 	}
 	this->m_bIsConnected = true;		//连接成功
 	return true;
@@ -134,9 +138,10 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 
 	//远程调用处理数据
 	DEBUGLOG("process the key before return.   key-->" << new_key.c_str());
-	m_redisRPC.processKey(new_key.c_str(), GET_TIMEOUT, m_getLock);
+	int iRlt = m_redisRPC.processKey(new_key.c_str(), GET_WAITTIMEOUT, m_getLock);
 	DEBUGLOG("process the key, job done.   key-->" << new_key.c_str());
-	
+	//if (iRlt == 0)
+	//	m_strLastGetKey = "";
 	//返回数据
 	m_getLock.lock();
 	bRlt = sendCmd(cmd, strOutResult);
@@ -226,12 +231,12 @@ int CRedis_Utils::pop(const std::string & strInListName, std::string & strOutRes
 		return -1;
 }
 
-void CRedis_Utils::subs(const std::string & strInKey, subsCallback cb)
+bool CRedis_Utils::subs(const std::string & strInKey, subsCallback cb)
 {
 	if (strInKey.length() == 0 || cb == nullptr)
 	{
 		WARNLOG("key or cb is null... subs failed");
-		return;
+		return false;
 	}
 
 	std::string new_key = genNewKey(strInKey);
@@ -242,9 +247,10 @@ void CRedis_Utils::subs(const std::string & strInKey, subsCallback cb)
 		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG("redis服务重新连接失败... ");
-			return;
+			return false;
 		}
 	}
+	bool bRlt = false;
 	if(m_bNeedSubs)
 	{
 		m_subsLock.lock();
@@ -254,6 +260,7 @@ void CRedis_Utils::subs(const std::string & strInKey, subsCallback cb)
 			m_mapSubsKeys.insert(std::pair<std::string, subsCallback>(new_key, cb));
 			DEBUGLOG("CRedis_Utils::subs 订阅成功 key = " << new_key.c_str()
 				<< ", size = " << m_mapSubsKeys.size());
+			bRlt = true;
 		}
 		else
 			DEBUGLOG("CRedis_Utils::subs 该键已经订阅 key = " << new_key.c_str());
@@ -261,14 +268,15 @@ void CRedis_Utils::subs(const std::string & strInKey, subsCallback cb)
 	}
 	else
 		DEBUGLOG("redis subs function is shutdown!!! needSubs = " << m_bNeedSubs);
+	return bRlt;
 }
 
-void CRedis_Utils::unsubs(const std::string & strInKey)
+bool CRedis_Utils::unsubs(const std::string & strInKey)
 {
 	if (strInKey.length() == 0)
 	{
 		WARNLOG("key or cb is null... subs failed");
-		return;
+		return false;
 	}
 	std::string new_key = genNewKey(strInKey);
 	if (!m_bIsConnected)
@@ -278,9 +286,10 @@ void CRedis_Utils::unsubs(const std::string & strInKey)
 		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG("redis服务重新连接失败... ");
-			return;
+			return false;
 		}
 	}
+	bool bRlt = false;
 	m_subsLock.lock();
 	mapSubsCB::iterator it = m_mapSubsKeys.find(new_key);
 	if (it != m_mapSubsKeys.end())
@@ -288,18 +297,20 @@ void CRedis_Utils::unsubs(const std::string & strInKey)
 		m_mapSubsKeys.erase(new_key);
 		DEBUGLOG("CRedis_Utils::unsubs 取消订阅成功 key = " << new_key.c_str()
 			<< ", size = " << m_mapSubsKeys.size());
+		bRlt = true;
 	}
 	else
 		DEBUGLOG("CRedis_Utils::unsubs 该键尚未被订阅 key = " << new_key.c_str());
 	m_subsLock.unlock();
+	return bRlt;
 }
 
-void CRedis_Utils::pull(const std::string & strInKey, pullCallback cb)
+bool CRedis_Utils::pull(const std::string & strInKey, pullCallback cb)
 {
 	if (strInKey.length() == 0 || cb == nullptr)
 	{
 		WARNLOG("key or cb is null... subs failed");
-		return;
+		return false;
 	}
 
 	std::string new_key = genNewKey(strInKey);
@@ -310,9 +321,10 @@ void CRedis_Utils::pull(const std::string & strInKey, pullCallback cb)
 		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG("redis服务重新连接失败... ");
-			return;
+			return false;
 		}
 	}
+	bool bRlt = false;
 	if(m_bNeedSubs)
 	{
 		m_pullLock.lock();
@@ -326,17 +338,19 @@ void CRedis_Utils::pull(const std::string & strInKey, pullCallback cb)
 		else
 			DEBUGLOG("CRedis_Utils::pull 该键已经订阅 key = " << new_key.c_str());
 		m_pullLock.unlock();
+		bRlt = true;
 	}
 	else
 		DEBUGLOG("redis subs function is shutdown!!! needSubs = " << m_bNeedSubs);
+	return bRlt;
 }
 
-void CRedis_Utils::unpull(const std::string & strInKey)
+bool CRedis_Utils::unpull(const std::string & strInKey)
 {
 	if (strInKey.length() == 0)
 	{
 		WARNLOG("key is null... unpull failed");
-		return;
+		return false;
 	}
 	std::string new_key = genNewKey(strInKey);
 	if (!m_bIsConnected)
@@ -346,9 +360,10 @@ void CRedis_Utils::unpull(const std::string & strInKey)
 		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG("redis服务重新连接失败... ");
-			return;
+			return false;
 		}
 	}
+	bool bRlt = false;
 	m_pullLock.lock();
 	mapPullCB::iterator it = m_mapPullKeys.find(new_key);
 	if (it != m_mapPullKeys.end())
@@ -356,18 +371,20 @@ void CRedis_Utils::unpull(const std::string & strInKey)
 		m_mapPullKeys.erase(new_key);
 		DEBUGLOG("CRedis_Utils::pull 取消订阅成功 key = " << new_key.c_str()
 			<< ", size = " << m_mapSubsKeys.size());
+		bRlt = true;
 	}
 	else
 		DEBUGLOG("CRedis_Utils::pull 该键已经订阅 key = " << new_key.c_str());
 	m_pullLock.unlock();
+	return bRlt;
 }
 
-void CRedis_Utils::subsClientGetOp(const std::string & strInKey, clientOpCallBack cb)
+bool CRedis_Utils::subsClientGetOp(const std::string & strInKey, clientOpCallBack cb)
 {
 	if (strInKey.length() == 0 || cb == nullptr)
 	{
 		WARNLOG("key or cb is null... subs failed");
-		return;
+		return false;
 	}
 
 	if (!m_bIsConnected)
@@ -377,15 +394,16 @@ void CRedis_Utils::subsClientGetOp(const std::string & strInKey, clientOpCallBac
 		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG("redis服务重新连接失败... ");
-			return;
+			return false;
 		}
 	}
+	bool bRlt = false;
 	if (m_bNeedSubs)
 	{
 		std::string new_key = genNewKey(strInKey);				//键
 		std::string heartBeat = new_key + HEARTLIST;			//心跳信令
 		std::string reqChnl = new_key + REQLIST;				//请求队列
-		std::string subsReqChnl = reqChnl + std::string("*");	//每个客户端对应一个请求队列
+		std::string subsReqChnl = reqChnl;// + std::string("*");	
 
 		mapReqCB::iterator it = m_mapReqChnl.find(subsReqChnl);
 		m_reqLock.lock();
@@ -394,20 +412,22 @@ void CRedis_Utils::subsClientGetOp(const std::string & strInKey, clientOpCallBac
 			m_mapReqChnl.insert(std::pair<std::string, pullCallback>(subsReqChnl, cb));
 			DEBUGLOG("subsClientGetOp 订阅成功 key = " << subsReqChnl.c_str()
 				<< ", size = " << m_mapReqChnl.size());
+			m_redisRPC.subsClientGetOp(new_key.c_str(), reqChnl.c_str(), heartBeat.c_str());
+			bRlt = true;
 		}
 		else
 			DEBUGLOG("subsClientGetOp 该键已经订阅 key = " << subsReqChnl.c_str());
 		m_reqLock.unlock();
-		m_redisRPC.subsClientGetOp(new_key.c_str(), reqChnl.c_str(), heartBeat.c_str());
 	}
+	return bRlt;
 }
 
-void CRedis_Utils::unsubClientGetOp(const std::string & strInKey)
+bool CRedis_Utils::unsubClientGetOp(const std::string & strInKey)
 {
 	if (strInKey.length() == 0)
 	{
 		WARNLOG("key is null... unsubClientGetOp failed");
-		return;
+		return false;
 	}
 	if (!m_bIsConnected)
 	{
@@ -416,9 +436,10 @@ void CRedis_Utils::unsubClientGetOp(const std::string & strInKey)
 		if (!_connect(m_strIp.c_str(), m_iPort))
 		{
 			WARNLOG("redis服务重新连接失败... ");
-			return;
+			return false;
 		}
 	}
+	bool bRlt = false;
 	if (m_mapReqChnl.size() > 0)
 	{
 		std::string new_key = genNewKey(strInKey);
@@ -429,10 +450,11 @@ void CRedis_Utils::unsubClientGetOp(const std::string & strInKey)
 			//DEBUGLOG << "before unsubGetOp chnlName = " << reqChnl << ", size = " << m_reqChnl.size();
 			m_mapReqChnl.erase(reqChnl);
 			DEBUGLOG("unsubGetOp chnlName = " << reqChnl.c_str() << ", size = " << m_mapReqChnl.size());
+			bRlt = true;
 		}
 		m_reqLock.unlock();
 	}
-	
+	return bRlt;
 }
 
 void CRedis_Utils::stopSubClientGetOp() 
@@ -463,19 +485,21 @@ void CRedis_Utils::close()
 		aeStop(m_loop);
 		m_loop = nullptr;
 		DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());
+		DEBUGLOG("wait for asyncThread quit... id --> " << m_strClientId.c_str());
+		if (thAsyncKeyNotify.joinable())
+			thAsyncKeyNotify.join();
+		DEBUGLOG("asyncThread quit... id --> " << m_strClientId.c_str());
 #else
-		event_base_loopbreak(base);
+		event_base_loopbreak(m_base);
 		DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());
 		//event_base_free(m_base);
 		//m_base = nullptr;
 #endif
-		DEBUGLOG("wait for asyncThread quit... id --> " << m_strClientId.c_str());
-		if(thAsyncKeyNotify.joinable())
-			thAsyncKeyNotify.join();
-		DEBUGLOG("asyncThread quit... id --> " << m_strClientId.c_str());
+
 		//m_aeStopLock.unlock();
 		}
 	}
+
 	if (m_pRedisContext != nullptr)
 	{
 		redisFree(m_pRedisContext);
@@ -693,13 +717,14 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 		{
 			if (keyMatch(std::string(strInKey), it_req->first))
 			{
-				if (strcmp(strInKeyOp.c_str(), "lpush") == 0)
+				if (strcmp(strInKeyOp.c_str(), "set") == 0)
 				{
 					std::string get_key = "";
 					std::string get_value = "";
-					if (sendCmd(popCmd, sRlt))		//获取请求队列中的值
+					if (sendCmd(getCmd, sRlt))		//获取请求队列中的值
 					{
 						get_key = sRlt;
+
 						sRlt.clear();
 						getCmd.clear();
 						getCmd = R_GET + std::string(" ") + get_key;
@@ -712,12 +737,17 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 					else
 						WARNLOG("获取请求队列信息失败... popCmd = " << getCmd.c_str()
 							<< ", errstr = " << sRlt.c_str());
-
 					it_req->second(getOldKey(get_key), get_value);
+					//if (get_key == m_strLastGetKey)
+					//	DEBUGLOG("重复key,不处理... key = " << get_key.c_str()
+					//		<< ", LastGetKey = " << m_strLastGetKey.c_str());
+					//else
+					//{
+					//	m_strLastGetKey = get_key;
+					//}
 				}
 			}
 		}
 	}
 	m_reqLock.unlock();
 }
-
