@@ -30,6 +30,7 @@ static void* multiThread(void *args);
 
 int main(int argc, char const *argv[])
 {
+	g_ECGLogger = CMyLogger::getInstance();
 	CRedis_Utils redis("Main");
 	redis.connect("192.168.31.217", 6379);
 
@@ -245,8 +246,8 @@ void subGetOp()
 		thGroup.push_back(std::thread(multiThread, &redisA));
 	for (int i = 0; i < THREADNUM; ++i)
 		thGroup[i].join();
-	//redisA.get("hello", msg);
-	//DEBUGLOG("get result = " << msg.c_str());
+	redisA.get("hello", msg);
+	DEBUGLOG("get result = " << msg.c_str());
 	//msg.clear();
 	//redisA.get("hello", msg);
 	//redisB.get("hello", msg);
@@ -256,7 +257,7 @@ void subGetOp()
 	//redisA.subsClientGetOp("hello123", getCBA);
 	//redisA.unsubClientGetOp("hello");
 	//redisA.unsubClientGetOp("hello123");
-	//getchar();
+	getchar();
 }
 void getCBA(const std::string & key, const std::string & value)
 {
