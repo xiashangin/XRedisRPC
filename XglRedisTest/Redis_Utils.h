@@ -45,19 +45,19 @@ public:
 			true：操作成功，结果通过lpStrRlt查看，一般为OK
 			false：操作失败，结果通过lpStrRlt查看
 	*/ 
-	int  get(const std::string & strInKey, std::string & strOutResult);
-	bool set(const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
-	bool push(const std::string & strInListName, const std::string & strInValue, std::string & strOutResult);
-	int  pop(const std::string & strInListName, std::string & strOutResult);
+	int get(const std::string & strInKey, std::string & strOutResult);
+	int set(const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
+	int push(const std::string & strInListName, const std::string & strInValue, std::string & strOutResult);
+	int pop(const std::string & strInListName, std::string & strOutResult);
 
 	//redis订阅功能
-	bool subs(const std::string & strInKey, subsCallback cb);	//subscribe channel
+	int subs(const std::string & strInKey, subsCallback cb);	//subscribe channel
 	bool unsubs(const std::string & strInKey);					//unsubscribe channel
-	bool pull(const std::string & strInKey, pullCallback cb);	//pull list
+	int pull(const std::string & strInKey, pullCallback cb);	//pull list
 	bool unpull(const std::string & strInKey);					//unpull list, like unsubs
 
 	//业务处理模块
-	bool subsClientGetOp(const std::string & strInKey, clientOpCallBack cb);
+	int subsClientGetOp(const std::string & strInKey, clientOpCallBack cb);
 	bool unsubClientGetOp(const std::string & strInKey);						//注销监听客户端get key操作
 	void stopSubClientGetOp();											//取消监听客户端全部get操作
 

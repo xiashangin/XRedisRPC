@@ -69,10 +69,15 @@ extern "C"
 #define GET_WAITTIMEOUT 10000
 
 
-#define GET_TIMEOUT			100		//业务模块处理超时
-#define GET_NOSERVICE		101		//无业务处理模块
-#define GET_REQFAIL			102		//发送请求失败
-#define GET_CONNFAIL		103		//redis服务连接失败
+#define REDIS_TIMEOUT			100		//业务模块处理超时
+#define REDIS_NOSERVICE			101		//无业务处理模块
+#define REDIS_SENDREQFAIL		102		//发送请求失败
+#define REDIS_CONNFAIL			103		//redis服务连接失败
+#define REDIS_CMD_ERR			105		//发送命令失败
+#define REDIS_KEY_NULL			104		//输入的key值为空
+#define REDIS_VALUE_NULL		105		//输入的value值为空
+#define REDIS_KEY_EXISTED		106		//key已被订阅
+#define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
 
 typedef std::map<std::string, std::string>		mapReqchnl;	//getkey-->requestChnl
 typedef std::map<std::string, std::string>		mapHBchnl;	//getkey-->HeartBeatChnl

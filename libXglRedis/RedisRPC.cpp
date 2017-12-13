@@ -30,7 +30,6 @@ CRedisRPC::~CRedisRPC()
 {
 }
 
-
 bool CRedisRPC::connect(const char* ip, int port)
 {
 	//临时redis客户端，用于订阅结果数据
@@ -108,7 +107,7 @@ int CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 			m_redisContext = nullptr;
 		}
 		processKeyLock.unlock();
-		return GET_CONNFAIL;		//连接redis失败
+		return REDIS_CONNFAIL;		//连接redis失败
 	}
 	//远程调用处理key值
 	//将键值塞入对应的请求队列
@@ -126,10 +125,10 @@ int CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 			m_redisContext = nullptr;
 		}
 		processKeyLock.unlock();
-		return GET_REQFAIL;			//发送请求失败
+		return REDIS_SENDREQFAIL;			//发送请求失败
 	}
 
-	int iRlt = GET_TIMEOUT;		//0表示成功
+	int iRlt = REDIS_TIMEOUT;		//0表示成功
 	CRedisRPC::m_bKeyProcessDone = false;
 	//等待处理结果，超时返回
 	redisReply *reply;
@@ -144,7 +143,7 @@ int CRedisRPC::processKey(const char *key, int timeout, mutex &processKeyLock)
 			m_redisContext = nullptr;
 		}
 		processKeyLock.unlock();
-		return GET_REQFAIL;
+		return REDIS_SENDREQFAIL;
 	}
 	if (reply != nullptr)
 		freeReplyObject(reply);
