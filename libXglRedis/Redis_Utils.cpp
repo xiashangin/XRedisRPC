@@ -8,6 +8,7 @@ CRedis_Utils::CRedis_Utils(std::string strClientID)
 		this->m_strClientId = strClientID;
 	else
 		this->m_strClientId = "default";
+	m_redisRPC.setClientId(m_strClientId);
 }
 
 CRedis_Utils::~CRedis_Utils()
@@ -26,8 +27,8 @@ bool CRedis_Utils::connect(const std::string & strIp, int port, bool isSubs)
 	this->m_strIp = strIp;
 	this->m_iPort = port;
 	this->m_bNeedSubs = isSubs;
-	m_redisRPC = CRedisRPC(strIp, port);
-
+	//m_redisRPC = CRedisRPC(strIp, port);
+	m_redisRPC.setRedisAddr(strIp, port);
 	//连接redis服务
 	DEBUGLOG("connect to redis server ip = " << this->m_strIp.c_str() << ", port = "
 		<< this->m_iPort << ", isSubs = " << this->m_bNeedSubs);
@@ -138,12 +139,12 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 
 	//远程调用处理数据
 	DEBUGLOG("process the key before return.   key-->" << new_key.c_str());
-	int iRlt = m_redisRPC.processKey(new_key.c_str(), GET_WAITTIMEOUT, m_getLock);
+	int iRlt = m_redisRPC.processKey(new_key.c_str());
 	DEBUGLOG("process the key, job done.   key-->" << new_key.c_str());
 	//if (iRlt == 0)
 	//	m_strLastGetKey = "";
 	//返回数据
-	m_getLock.lock();
+	//m_getLock.lock();
 	bRlt = sendCmd(cmd, strOutResult);
 	m_getLock.unlock();
 	return iRlt;
