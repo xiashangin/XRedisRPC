@@ -413,8 +413,8 @@ int CRedis_Utils::subsClientGetOp(const std::string & strInKey, clientOpCallBack
 	if (m_bNeedSubs)
 	{
 		std::string new_key = genNewKey(strInKey);				//键
-		std::string heartBeat = new_key + HEARTLIST;			//心跳信令
-		std::string reqChnl = new_key + REQLIST;				//请求队列
+		std::string heartBeat = new_key + HEARTSLOT;			//心跳信令
+		std::string reqChnl = new_key + REQSLOT;				//请求队列
 		std::string subsReqChnl = reqChnl;// + std::string("*");	
 
 		mapReqCB::iterator it = m_mapReqChnl.find(subsReqChnl);
@@ -480,6 +480,17 @@ void CRedis_Utils::stopSubClientGetOp()
 	if (m_mapReqChnl.size() > 0)
 		m_mapReqChnl.clear();
 	m_reqLock.unlock();
+}
+
+int CRedis_Utils::notifyRlt(const std::string & strInKey, const std::string & strInValue)
+{
+	std::string strRlt;
+	std::string processURL = strInKey + std::string(REQSLOT) + std::string(REQPROCESSING);
+	//std::string setProcessCMd = std::string(R_SET) + std::string(" ") + processURL + std::string(" ") + std::string("0");
+	strRlt.clear();
+	set(processURL, "0", strRlt);	
+	strRlt.clear();
+	return set(strInKey, strInValue, strRlt);
 }
 
 void CRedis_Utils::close()
@@ -675,6 +686,26 @@ void CRedis_Utils::subsAllCallback(redisAsyncContext *c, void *r, void *data)
 	}
 }
 
+bool CRedis_Utils::getReq(std::string strInKey)
+{
+	std::string getProcessCmd = R_GET + std::string(" ") + strInKey + std::string(REQPROCESSING);
+	std::string setProcessingCmd = R_SET + std::string(" ") + strInKey + std::string(REQPROCESSING)
+		+ std::string(" ") + std::string("1");
+	std::string getRlt, setRlt;
+	redisCommand(m_pRedisContext, "MULTI");
+	sendCmd(getProcessCmd, getRlt);
+	sendCmd(setProcessingCmd, setRlt);
+	redisReply *reply = (redisReply *)redisCommand(m_pRedisContext, "EXEC");
+
+	std::string strRlt;
+	replyCheck(reply, strRlt);
+	DEBUGLOG("funckskdjalda sakdja = " << strRlt.c_str());
+	if (strRlt.length() == 3 && strRlt.find("0") == std::string::npos)
+		return false;
+	else
+		return true;
+}
+
 void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & strInKeyOp)
 {
 	std::string getCmd = R_GET + std::string(" ") + strInKey;
@@ -735,25 +766,31 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 			{
 				if (strcmp(strInKeyOp.c_str(), "set") == 0)
 				{
-					std::string get_key = "";
-					std::string get_value = "";
-					if (sendCmd(getCmd, sRlt))		//获取请求队列中的值
+					if (getReq(strInKey))
 					{
-						get_key = sRlt;
+						std::string get_key = "";
+						std::string get_value = "";
 
-						sRlt.clear();
-						getCmd.clear();
-						getCmd = R_GET + std::string(" ") + get_key;
-						if (sendCmd(getCmd.c_str(), sRlt))		//获取对应的值
-							get_value = sRlt;
+						if (sendCmd(getCmd, sRlt))		//获取请求队列中的值
+						{
+							get_key = sRlt;
+
+							sRlt.clear();
+							getCmd.clear();
+							getCmd = R_GET + std::string(" ") + get_key;
+							if (sendCmd(getCmd.c_str(), sRlt))		//获取对应的值
+								get_value = sRlt;
+							else
+								WARNLOG("get value failed... getCmd = " << getCmd.c_str()
+									<< ", errstr = " << sRlt.c_str());
+						}
 						else
-							WARNLOG("get value failed... getCmd = " << getCmd.c_str()
+							WARNLOG("获取请求队列信息失败... getCmd = " << getCmd.c_str()
 								<< ", errstr = " << sRlt.c_str());
+						it_req->second(getOldKey(get_key), get_value);
 					}
 					else
-						WARNLOG("获取请求队列信息失败... popCmd = " << getCmd.c_str()
-							<< ", errstr = " << sRlt.c_str());
-					it_req->second(getOldKey(get_key), get_value);
+						DEBUGLOG("该key已经被处理... key = " << strInKey.c_str());
 					//if (get_key == m_strLastGetKey)
 					//	DEBUGLOG("重复key,不处理... key = " << get_key.c_str()
 					//		<< ", LastGetKey = " << m_strLastGetKey.c_str());

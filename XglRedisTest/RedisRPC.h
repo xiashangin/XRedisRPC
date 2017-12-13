@@ -23,21 +23,6 @@ extern "C"
 #include <hiredis/adapters/libevent.h>
 #endif
 
-//#include "easylogging++.h"
-
-//#define INFOLOG LOG(INFO)<<__FUNCTION__<<"***"
-//#define TRACELOG LOG(TRACE)<<__FUNCTION__<<"***"
-//#define WARNLOG LOG(WARNING)<<__FUNCTION__<<"***"
-//#define DEBUGLOG LOG(DEBUG)<<__FUNCTION__<<"***"
-//#define ERRORLOG LOG(ERROR)<<__FUNCTION__<<"***"
-
-//#define INFOLOG cout<<endl<<time2str(time(NULL))<<"[info]"<<__FUNCTION__<<"***"
-//#define TRACELOG cout<<endl<<time2str(time(NULL))<<"[trace]"<<__FUNCTION__<<"***"
-//#define WARNLOG cout<<endl<<time2str(time(NULL))<<"[warn]"<<__FUNCTION__<<"***"
-//#define DEBUGLOG cout<<endl<<time2str(time(NULL))<<"[debug]"<<__FUNCTION__<<"***"
-//#define ERRORLOG cout<<endl<<time2str(time(NULL))<<"[error]"<<__FUNCTION__<<"***"
-//#define FATALLOG cout<<endl<<time2str(time(NULL))<<"[fatal]"<<__FUNCTION__<<"***"
-
 #define INFOLOG(inf) LOG4CPLUS_INFO(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
 #define TRACELOG(inf) LOG4CPLUS_TRACE(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
 #define DEBUGLOG(inf) LOG4CPLUS_DEBUG(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
@@ -61,8 +46,9 @@ extern "C"
 #define R_KEYSPACE	"__keyspace@0__:"
 
 //RPC list
-#define HEARTLIST	"_heart_beart_list"
-#define REQLIST		"_request_list"
+#define HEARTSLOT		"_heart_beart_slot"
+#define REQPROCESSING	"_processing?"
+#define REQSLOT			"_request_slot"
 
 #define HEARTBEATTIMEOUT	10		//10s不更新heartbeat
 #define HEARTBEATINTERVAL	3
@@ -102,6 +88,7 @@ public:
 	void setClientId(const std::string & strClientId);
 	void setRedisAddr(const std::string & strIp, const int iPort);
 private:
+	bool sendReq(redisContext *c, std::string strReqCmd, std::string strProcesssCmd);
 	static void* thTimeout(void *arg);
 	static void* thSetHeartBeat(void *arg);
 	std::mutex hbLock;
@@ -109,7 +96,7 @@ private:
 	mapReqchnl m_mapReqChnl;
 	mapHBchnl  m_mapHBChnl;
 
-	std::string m_strIp;				//redis ip
+	std::string m_strIp;			//redis ip
 	int m_iPort;					//redis 端口
 	std::string m_strRequestID;
 	redisContext *m_redisContext;

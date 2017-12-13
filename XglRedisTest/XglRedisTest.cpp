@@ -238,16 +238,18 @@ void subGetOp()
 	redisA.connect("192.168.31.217", 6379, true);
 	redisA.subsClientGetOp("hello", getCBA);
 
-	CRedis_Utils redisB("B");
+	CRedis_Utils redisB("A");
 	redisB.connect("192.168.31.217", 6379, true);
 	redisB.subsClientGetOp("hello", getCBB);
-	//std::string msg;
+	std::string msg;
 	//vector<std::thread> thGroup;
 	//for (int i = 0; i < THREADNUM; ++i)
 	//	thGroup.push_back(std::thread(multiThread, &redisA));
 	//for (int i = 0; i < THREADNUM; ++i)
 	//	thGroup[i].join();
-	//redisA.get("hello", msg);
+	redisA.get("hello", msg);
+	DEBUGLOG("get result = " << msg.c_str());
+	//redisB.get("hello", msg);
 	//DEBUGLOG("get result = " << msg.c_str());
 	//msg.clear();
 	//redisA.get("hello", msg);
@@ -269,19 +271,19 @@ void getCBA(const std::string & key, const std::string & value)
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	//通知客户端处理完成
 	if (value.length() == 0)
-		redis.set(key, "nil", msg);
+		redis.notifyRlt(key, "nil");
 	else
 	{
 		std::string value_ = value + std::string("getCBA");
 		
-		redis.set(key, value_.c_str(), msg);
+		redis.notifyRlt(key, value_.c_str());
 	}
 }
 
 void getCBB(const std::string & key, const std::string & value)
 {
 	DEBUGLOG("clientB got get msg!!!");
-	CRedis_Utils redis("B");
+	CRedis_Utils redis("A");
 	redis.connect("192.168.31.217", 6379);
 	std::string msg;	//数据处理，处理完成之后调用set接口更新数据
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -290,8 +292,7 @@ void getCBB(const std::string & key, const std::string & value)
 		redis.set(key, "nil", msg);
 	else
 	{
-		std::string value_ = value + std::string("getCBA");
-
+		std::string value_ = value + std::string("getCBB");
 		redis.set(key, value_.c_str(), msg);
 	}
 

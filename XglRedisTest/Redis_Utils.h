@@ -58,9 +58,9 @@ public:
 
 	//业务处理模块
 	int subsClientGetOp(const std::string & strInKey, clientOpCallBack cb);
-	bool unsubClientGetOp(const std::string & strInKey);						//注销监听客户端get key操作
-	void stopSubClientGetOp();											//取消监听客户端全部get操作
-
+	bool unsubClientGetOp(const std::string & strInKey);							//注销监听客户端get key操作
+	void stopSubClientGetOp();														//取消监听客户端全部get操作
+	int notifyRlt(const std::string & strInKey, const std::string & strInValue);	//通知客户端处理完成
 private:
 	void close();
 	bool _connect(const std::string & strIp, int iPort);
@@ -75,6 +75,7 @@ private:
 	static void connectCallback(const redisAsyncContext *c, int iStatus);	//redis异步回调函数
 	static void disconnectCallback(const redisAsyncContext *c, int iStatus);
 	static void subsAllCallback(redisAsyncContext *c, void *r, void *data);
+	bool getReq(std::string strInkey);
 
 	void callSubsCB(const std::string & strInKey, const std::string & strInOp);
 	CRedis_Utils(const CRedis_Utils & c);

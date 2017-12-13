@@ -59,7 +59,7 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	{
 		return false;
 	}
-	std::string heartBeat = key + std::string(HEARTLIST);			//心跳信令
+	std::string heartBeat = key + std::string(HEARTSLOT);			//心跳信令
 	std::string getHeartBeatCmd = R_GET + std::string(" ") + heartBeat;
 	redisReply *reply = (redisReply *)redisCommand(m_redisContext, getHeartBeatCmd.c_str());
 	std::string heartbeat;
@@ -112,13 +112,15 @@ int CRedisRPC::processKey(const char *key)
 	//远程调用处理key值
 	//将键值塞入对应的请求队列
 	//processKeyLock.lock();
-	std::string reqChnl = key + std::string(REQLIST);
+	std::string reqChnl = key + std::string(REQSLOT);
 	std::string requestURL = reqChnl;// + m_strRequestID;
 									 //std::string pushCmd = std::string(R_PUSH) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
-	std::string setCmd = std::string(R_SET) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
-	if (!redisCommand(m_redisContext, setCmd.c_str()))
+	std::string processURL = reqChnl + std::string(REQPROCESSING);
+	std::string setReqCmd = std::string(R_SET) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
+	std::string setProcessCMd = std::string(R_SET) + std::string(" ") + processURL + std::string(" ") + std::string("0");
+	if (!redisCommand(m_redisContext, setReqCmd.c_str()))
 	{
-		WARNLOG("请求远程服务失败... pushCMD = " << setCmd.c_str());
+		WARNLOG("请求远程服务失败... setReqCmd = " << setReqCmd.c_str());
 		if (m_redisContext)
 		{
 			redisFree(m_redisContext);
@@ -226,6 +228,17 @@ std::string CRedisRPC::unsubClientGetOp(const char *keys)
 	return chnlName;
 }
 
+
+bool CRedisRPC::sendReq(redisContext *context, std::string strReqCmd, std::string strProcesssCmd)
+{
+	if (!redisCommand(context, "MULTI") ||
+		!redisCommand(context, strReqCmd.c_str()) ||
+		!redisCommand(context, strProcesssCmd.c_str()) ||
+		!redisCommand(context, "EXEC"))
+		return false;
+	return true;
+}
+
 void* CRedisRPC::thTimeout(void *arg)
 {
 	CRedisRPC *self = (CRedisRPC *)arg;
@@ -270,6 +283,9 @@ void* CRedisRPC::thTimeout(void *arg)
 	string renameBackCmd = std::string(R_RENAME) + std::string(" ") + new_key + " " + key;
 	string setCmd = std::string(R_SET) + std::string(" ") + key + std::string(" ") + key;
 	string delCmd = std::string(R_DEL) + std::string(" ") + key;
+	std::string setProcessingCmd = R_SET + std::string(" ") + key + std::string(REQSLOT) + std::string(REQPROCESSING)
+		+ std::string(" ") + std::string("0");
+	redisCommand(context, setProcessingCmd.c_str());
 	if ((reply = (redisReply *)(redisCommand(context, existKeyCmd.c_str()))) && reply->integer)	//检查要get的key是否存在
 	{
 		freeReplyObject(reply);
