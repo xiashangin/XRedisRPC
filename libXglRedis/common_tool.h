@@ -9,16 +9,20 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
+
 
 using namespace std;
 
 extern "C" {
 #include "include/uuid/uuid4.h"
 }
+
+
 
 #include "include/log/MyLogger.h"
 
@@ -32,6 +36,15 @@ std::string int2str ( const int &int_temp );
 std::string double2str ( const double &double_temp );
 
 vector<std::string> split(std::string str, std::string pattern);
+
+// 定义64位整形
+#if defined(_WIN32) && !defined(CYGWIN)
+typedef __int64 int64_t;
+#else
+typedef long long int64t;
+#endif  // _WIN32
+int64_t GetSysTimeMicros();
+
 bool keyMatch(const std::string srcStr, const std::string & strPattern);
 
 std::string generate_uuid();

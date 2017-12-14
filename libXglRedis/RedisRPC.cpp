@@ -57,13 +57,13 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	bool bRlt = false;
 	if (!connect(m_strIp.c_str(), m_iPort))
 	{
-		return false;
+		return bRlt;
 	}
 	std::string heartBeat = key + std::string(HEARTSLOT);			//心跳信令
 	std::string getHeartBeatCmd = R_GET + std::string(" ") + heartBeat;
 	redisReply *reply = (redisReply *)redisCommand(m_redisContext, getHeartBeatCmd.c_str());
 	std::string heartbeat;
-	if (reply->type == REDIS_REPLY_STRING)
+	if (reply && reply->type == REDIS_REPLY_STRING)
 	{
 		heartbeat = reply->str;
 		DEBUGLOG("heartbeat = " << heartbeat.c_str() << ", now = " << time(NULL));
@@ -73,6 +73,8 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	else
 		WARNLOG("获取心跳数据失败...");
 	freeReplyObject(reply);
+	redisFree(m_redisContext);
+	m_redisContext = nullptr;
 	return bRlt;
 }
 

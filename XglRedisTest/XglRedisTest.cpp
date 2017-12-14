@@ -22,17 +22,22 @@ void subGetOp();
 void getCBA(const std::string & strKey, const std::string & strValue);
 void getCBB(const std::string & strKey, const std::string & strValue);
 
-#define THREADNUM 10
 void abnormalTest(CRedis_Utils& redis);
+void performanceTest(int clientId);
 
-
+#define THREADNUM 10
 static void* multiThread(void *args);
+static void* multiThreadGet(void * lpStrClientId);
+static void* multiThreadSet(void * lpStrClientId);
+static void* multiThreadPush(void * lpStrClientId);
+static void* multiThreadPop(void * lpStrClientId);
+
 
 int main(int argc, char const *argv[])
 {
 	g_ECGLogger = CMyLogger::getInstance();
-	CRedis_Utils redis("Main");
-	redis.connect("192.168.31.217", 6379);
+	//CRedis_Utils redis("Main");
+	//redis.connect("192.168.31.217", 6379);
 
 	//std::thread t1;
 	//t1 = thread(multiThread, &redis);
@@ -46,16 +51,38 @@ int main(int argc, char const *argv[])
 	//订阅发布测试
 	//subs_test();
 	//pull_test();
-	subGetOp();
+	//subGetOp();
 
 	//abnormalTest(redis);
+	//performanceTest(1);
 
 	//多线程测试
-	//vector<thread> thGroup;
+	//vector<std::thread> thGroup;
 	//for (int i = 0; i < THREADNUM; ++i)
-	//	thGroup.push_back(thread(multiThread, &redis));
+	//	thGroup.push_back(std::thread(multiThread, &i));
 	//for (int i = 0; i < THREADNUM; ++i)
 	//	thGroup[i].join();
+
+	char * getSetClientId = "GetSetTest";
+	char * PushPopClientId = "PushPopTest";
+	vector<std::thread> thGetGroup, thSetGroup, thPushGroup, thPopGroup;
+	for (int i = 0; i < THREADNUM; ++i)
+		thGetGroup.push_back(std::thread(multiThreadGet, getSetClientId));
+	for (int i = 0; i < THREADNUM; ++i)
+		thSetGroup.push_back(std::thread(multiThreadSet, getSetClientId));
+	for (int i = 0; i < THREADNUM; ++i)
+		thPushGroup.push_back(std::thread(multiThreadPush, PushPopClientId));
+	for (int i = 0; i < THREADNUM; ++i)
+		thPopGroup.push_back(std::thread(multiThreadPop, PushPopClientId));
+
+	for (int i = 0; i < THREADNUM; ++i)
+		thGetGroup[i].join();
+	for (int i = 0; i < THREADNUM; ++i)
+		thSetGroup[i].join();
+	for (int i = 0; i < THREADNUM; ++i)
+		thPushGroup[i].join();
+	for (int i = 0; i < THREADNUM; ++i)
+		thPopGroup[i].join();
 	getchar();
 	return 0;
 }
@@ -299,21 +326,22 @@ void getCBB(const std::string & key, const std::string & value)
 }
 
 
-//void abnormalTest(CRedis_Utils& redis)
-//{
-//	redis.get("", nullptr);
-//	redis.set("", "", nullptr);
-//	redis.push("", "", nullptr);
-//	redis.pop("",  nullptr);
-//
-//	redis.subs("", nullptr);
-//	redis.unsubs("");
-//	redis.pull("", nullptr);
-//	redis.unpull("");
-//
-//	redis.subsClientGetOp("", nullptr);
-//	redis.unsubClientGetOp("");
-//}
+void abnormalTest(CRedis_Utils& redis)
+{
+	std::string strRlt;
+	redis.get("", strRlt);
+	redis.set("", "", strRlt);
+	redis.push("", "", strRlt);
+	redis.pop("", strRlt);
+
+	redis.subs("", nullptr);
+	redis.unsubs("");
+	redis.pull("", nullptr);
+	redis.unpull("");
+
+	redis.subsClientGetOp("", nullptr);
+	redis.unsubClientGetOp("");
+}
 
 void* multiThread(void *args)
 {
@@ -324,10 +352,12 @@ void* multiThread(void *args)
 	ss << std::this_thread::get_id();
 	ss >> strPid;
 
-	DEBUGLOG("getOp pid = " << strPid.c_str());
-	std::string msg;
-	redis->get("hello", msg);
-	DEBUGLOG("get result = " << msg.c_str());
+	//测试订阅客户端get操作
+	//DEBUGLOG("getOp pid = " << strPid.c_str());
+	//std::string msg;
+	//redis->get("hello", msg);
+	//DEBUGLOG("get result = " << msg.c_str());
+
 
 
 	//std::string key = "hellolist" + strPid;
@@ -339,5 +369,161 @@ void* multiThread(void *args)
 	//	else
 	//		ERRORLOG("set op fail!!! err = " << msg.c_str());
 	//}
+	return nullptr;
+}
+
+void performanceTest(int clientId)
+{
+	CRedis_Utils redis(int2str(clientId).c_str());
+	redis.connect("192.168.31.217", 6379);
+	
+	std::string strRlt;
+	DEBUGLOG("start!!!!");
+	std::vector<int> oneOpTime;
+	for(int i = 0; i < 1000; ++i)
+	{
+		std::string strKey = int2str(clientId) + int2str(i);
+		std::string strValue = generate_uuid();
+		int64_t now = GetSysTimeMicros();
+		DEBUGLOG("start send cmd now = " << now);
+		//redis.set(strKey, strValue, strRlt);
+		//redis.get(strKey, strRlt);
+		//redis.push(strKey, strValue, strRlt);
+		redis.pop(strKey, strRlt);
+		DEBUGLOG("send cmd complete interval = " << GetSysTimeMicros() - now);
+		oneOpTime.push_back(GetSysTimeMicros() - now);
+		DEBUGLOG("set success!!! key = " << strKey.c_str() << ", value = "
+			<< strValue.c_str() << ", rlt = " << strRlt.c_str());
+		strRlt.clear();
+	}
+	int avg = std::accumulate(oneOpTime.begin(), oneOpTime.end(), 0) / oneOpTime.size();
+	DEBUGLOG("end!!!! avg = " << avg
+		<< ", hiredis avg = " << redis.getAvgOpTime());
+}
+
+CRedis_Utils* getRedisUtil(std::string clientId)
+{
+	CRedis_Utils *redis = new CRedis_Utils(clientId);
+	redis->connect("192.168.31.217", 6379);
+	return redis;
+}
+
+std::string getThreadId()
+{
+	stringstream ss;
+	std::string strPid;
+	ss << std::this_thread::get_id();
+	ss >> strPid;
+	return strPid;
+}
+
+#include <random>
+int getRandomNum(int low, int high)
+{
+	std::random_device rd;
+	std::default_random_engine e(rd());
+	std::uniform_int_distribution<> u(low, high);
+	return u(e);
+}
+
+std::vector<std::string> vecThreadId;
+#define OPTIME 100000
+void* multiThreadGet(void * lpStrClientId)
+{
+	CRedis_Utils *redis = getRedisUtil(std::string((char *)lpStrClientId));
+	std::string thread_id = getThreadId();
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	std::string strRlt;
+
+	for (int i = 1; i <= OPTIME; ++i)
+	{
+		int num = getRandomNum(0, vecThreadId.size() - 1);
+		int status = redis->get(vecThreadId[num] + int2str(i), strRlt);
+		if (status == 0)
+			DEBUGLOG("get success!!!  rlt = " << strRlt.c_str() << ", key = " << (vecThreadId[num] + int2str(i)).c_str());
+		else
+			DEBUGLOG("get fail!!!  errstatus = " << status << ", errstr = " << strRlt.c_str());
+		strRlt.clear();
+		std::this_thread::sleep_for(std::chrono::milliseconds(getRandomNum(800, 1000)));
+	}
+
+	delete redis;
+	return nullptr;
+}
+
+
+void* multiThreadSet(void * lpStrClientId)
+{
+	CRedis_Utils *redis = getRedisUtil(std::string((char *)lpStrClientId));
+	std::string thread_id = getThreadId();
+	vecThreadId.push_back(thread_id);
+	DEBUGLOG("thread num = " << vecThreadId.size());
+	std::string strRlt;
+
+	for (int i = 1; i <= OPTIME; ++i)
+	{
+		std::string strValue = thread_id + "_" + int2str(i);
+		int status = redis->set(thread_id + int2str(i), strValue, strRlt);
+		if (status == 0)
+			DEBUGLOG("set success!!!  value = " << strValue.c_str() << ", rlt = " << strRlt.c_str());
+		else
+			DEBUGLOG("set fail!!!  errstatus = " << status << ", errstr = " << strRlt.c_str());
+		strRlt.clear();
+		std::this_thread::sleep_for(std::chrono::milliseconds(getRandomNum(500, 900)));
+	}
+
+	delete redis;
+	return nullptr;
+}
+
+
+void* multiThreadPush(void * lpStrClientId)
+{
+	CRedis_Utils *redis = getRedisUtil(std::string((char *)lpStrClientId));
+	std::string thread_id = getThreadId();
+
+	std::string strRlt;
+
+	for (int i = 1; i <= OPTIME; ++i)
+	{
+		std::string strValue = thread_id + "_" + int2str(i);
+		int status = redis->push(int2str(i), strValue, strRlt);
+		if (status == 0)
+			DEBUGLOG("push success!!!  value = " << strValue.c_str() << ", rlt = " << strRlt.c_str());
+		else
+			DEBUGLOG("push fail!!!  errstatus = " << status << ", errstr = " << strRlt.c_str());
+		strRlt.clear();
+		std::this_thread::sleep_for(std::chrono::milliseconds(getRandomNum(500, 900)));
+
+		strRlt.clear();
+	}
+
+	delete redis;
+	return nullptr;
+}
+
+void* multiThreadPop(void * lpStrClientId)
+{
+	CRedis_Utils *redis = getRedisUtil(std::string((char *)lpStrClientId));
+	std::string thread_id = getThreadId();
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	std::string strRlt;
+
+	for (int i = 1; i <= OPTIME; ++i)
+	{
+		int status = redis->pop(int2str(i), strRlt);
+		if (status == 0)
+			DEBUGLOG("pop success!!!  rlt = " << strRlt.c_str() << ", key = " << int2str(i).c_str());
+		else
+			DEBUGLOG("pop fail!!!  errstatus = " << status << ", errstr = " << strRlt.c_str());
+		strRlt.clear();
+		std::this_thread::sleep_for(std::chrono::milliseconds(getRandomNum(800, 1000)));
+
+		strRlt.clear();
+	}
+
+	delete redis;
 	return nullptr;
 }

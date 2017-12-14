@@ -70,6 +70,37 @@ std::vector<std::string> split(std::string str, std::string pattern)
 	return result;
 }
 
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/time.h>
+#endif  // _WIND32
+
+
+// 获取系统的当前时间，单位微秒(us)
+int64_t GetSysTimeMicros()
+{
+#ifdef _WIN32
+	// 从1601年1月1日0:0:0:000到1970年1月1日0:0:0:000的时间(单位100ns)
+#define EPOCHFILETIME   (116444736000000000UL)
+	FILETIME ft;
+	LARGE_INTEGER li;
+	int64_t tt = 0;
+	GetSystemTimeAsFileTime(&ft);
+	li.LowPart = ft.dwLowDateTime;
+	li.HighPart = ft.dwHighDateTime;
+	// 从1970年1月1日0:0:0:000到现在的微秒数(UTC时间)
+	tt = (li.QuadPart - EPOCHFILETIME) / 10;
+	return tt;
+#else
+	timeval tv;
+	gettimeofday(&tv, 0);
+	return (int64_t)tv.tv_sec * 1000000 + (int64_t)tv.tv_usec;
+#endif // _WIN32
+	return 0;
+}
+
 // 文件名匹配
 // 本字符串里保存着文件名, 参数传入匹配模板, 匹配成功返回 true, 否则返回 false
 // 匹配时注意先自行转换大小写, 本匹配函数不做自动大小写转换

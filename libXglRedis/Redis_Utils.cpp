@@ -132,7 +132,7 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 		bRlt = sendCmd(cmd, strOutResult);
 		m_getLock.unlock();
 		if (bRlt)
-			return strOutResult.length();
+			return 0;
 		else
 			return REDIS_NOSERVICE;
 	} 
@@ -493,6 +493,11 @@ int CRedis_Utils::notifyRlt(const std::string & strInKey, const std::string & st
 	return set(strInKey, strInValue, strRlt);
 }
 
+int CRedis_Utils::getAvgOpTime()
+{
+	return std::accumulate(hiredisOneOpTime.begin(), hiredisOneOpTime.end(), 0) / hiredisOneOpTime.size();
+}
+
 void CRedis_Utils::close()
 {
 	DEBUGLOG("close redis connection ip = " << this->m_strIp.c_str() << ", port = "
@@ -569,7 +574,11 @@ bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutRes
 {
 	bool bRlt = false;
 	//m_aeStopLock.lock();
+	int64_t now = GetSysTimeMicros();
+	DEBUGLOG("start send cmd now = " << now);
 	redisReply *pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());  //Ö´ÐÐINFOÃüÁî
+	DEBUGLOG("send cmd complete interval = " << GetSysTimeMicros() - now);
+	hiredisOneOpTime.push_back(GetSysTimeMicros() - now);
 	//m_aeStopLock.unlock();
 	//´íÎó´¦Àí!!!
 	if (!pRedisReply)

@@ -71,6 +71,8 @@ public:
 	bool unsubClientGetOp(const std::string & strInKey);							//注销监听客户端get key操作
 	void stopSubClientGetOp();														//取消监听客户端全部get操作
 	int notifyRlt(const std::string & strInKey, const std::string & strInValue);	//通知客户端处理完成
+
+	int getAvgOpTime();
 private:
 	CRedis_Utils(const CRedis_Utils & c);	//不允许拷贝
 	
@@ -115,7 +117,7 @@ private:
 	mutex m_aeStopLock;
 
 	std::thread thAsyncKeyNotify;
-
+	std::vector<int> hiredisOneOpTime;
 	std::string m_strIp;				//redis ip
 	int m_iPort;						//redis 端口
 
