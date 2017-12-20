@@ -32,12 +32,6 @@
     <ClCompile Include="include\redis_ae\zmalloc.c">
       <Filter>redis_ae</Filter>
     </ClCompile>
-    <ClCompile Include="common_tool.cpp">
-      <Filter>资源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Redis_Utils.cpp">
-      <Filter>资源文件</Filter>
-    </ClCompile>
     <ClCompile Include="RedisRPC.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
@@ -47,22 +41,34 @@
     <ClCompile Include="include\log\MyLogger.cpp">
       <Filter>log</Filter>
     </ClCompile>
+    <ClCompile Include="CommonTools.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RedisUtils.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CacheUtils.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\uuid\uuid4.h">
       <Filter>uuid</Filter>
-    </ClInclude>
-    <ClInclude Include="common_tool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Redis_Utils.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RedisRPC.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\log\MyLogger.h">
       <Filter>log</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonTools.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RedisUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CacheUtils.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

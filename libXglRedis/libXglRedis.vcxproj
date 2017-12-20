@@ -147,21 +147,23 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="common_tool.cpp" />
+    <ClCompile Include="CacheUtils.cpp" />
+    <ClCompile Include="CommonTools.cpp" />
     <ClCompile Include="include\log\MyLogger.cpp" />
     <ClCompile Include="include\redis_ae\adlist.c" />
     <ClCompile Include="include\redis_ae\ae.c" />
     <ClCompile Include="include\redis_ae\zmalloc.c" />
     <ClCompile Include="include\uuid\uuid4.cpp" />
     <ClCompile Include="RedisRPC.cpp" />
-    <ClCompile Include="Redis_Utils.cpp" />
+    <ClCompile Include="RedisUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common_tool.h" />
+    <ClInclude Include="CacheUtils.h" />
+    <ClInclude Include="CommonTools.h" />
     <ClInclude Include="include\log\MyLogger.h" />
     <ClInclude Include="include\uuid\uuid4.h" />
     <ClInclude Include="RedisRPC.h" />
-    <ClInclude Include="Redis_Utils.h" />
+    <ClInclude Include="RedisUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

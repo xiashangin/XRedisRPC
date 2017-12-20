@@ -1,6 +1,6 @@
-#include "common_tool.h"
+#include "CommonTools.h"
 
-CMyLogger *g_ECGLogger;// = CMyLogger::getInstance();
+CMyLogger *g_ECGLogger = nullptr;// = CMyLogger::getInstance();
 
 std::string time2str ( time_t time )
 {

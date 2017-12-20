@@ -24,5 +24,6 @@ CMyLogger::~CMyLogger()
 	if (my_logger)
 	{
 		delete my_logger;
+		my_logger = nullptr;
 	}
 }

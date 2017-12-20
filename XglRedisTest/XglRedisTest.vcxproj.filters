@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="uuid">
-      <UniqueIdentifier>{ddaac516-de94-4648-b24d-a655b277991d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="log">
-      <UniqueIdentifier>{33fa1b0e-772c-4e72-b4db-ad59298152d5}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -27,25 +21,10 @@
     <ClCompile Include="XglRedisTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="include\uuid\uuid4.cpp">
-      <Filter>uuid</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common_tool.h">
+    <ClInclude Include="CacheUtils.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Redis_Utils.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="RedisRPC.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\easylog\easylogging++.h">
-      <Filter>log</Filter>
-    </ClInclude>
-    <ClInclude Include="include\uuid\uuid4.h">
-      <Filter>uuid</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
