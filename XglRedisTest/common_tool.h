@@ -40,7 +40,7 @@ vector<std::string> split(std::string str, std::string pattern);
 #if defined(_WIN32) && !defined(CYGWIN)
 typedef __int64 int64_t;
 #else
-typedef long long int64_t;
+typedef long long int64t;
 #endif  // _WIN32
 int64_t GetSysTimeMicros();
 
