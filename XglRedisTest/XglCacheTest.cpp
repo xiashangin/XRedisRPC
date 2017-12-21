@@ -14,7 +14,6 @@ int main(int argc, char const *argv[])
 		logInfo << "connect failed... ip = " << REDISIP << ", port = " << REDISPORT;
 		setLog(LOG_DEBUG, logInfo);
 	}
-
 	//bool bRlt = redis.connect(REDISIP, REDISPORT);
 	//if (!bRlt)
 	//{

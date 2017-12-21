@@ -2,6 +2,8 @@
 
 #include "RedisRPC.h"
 
+#define DEFAULT_CLIENTID		"__default__"
+
 typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
 typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
 typedef void(*clientOpCallBack)(const std::string & strKey, const std::string & strValue);
@@ -13,6 +15,7 @@ typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
 class CRedis_Utils
 {
 public:
+	//如果传入的strClientID是空字符串，那么此字段会有一个默认值：__default__
 	CRedis_Utils(const std::string & strClientID);
 	~CRedis_Utils();
 

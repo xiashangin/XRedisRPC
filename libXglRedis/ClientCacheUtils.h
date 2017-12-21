@@ -54,6 +54,7 @@ public:
 	操作结果通过strOutResult获取
 
 	使用说明：此接口添加了strClientId字段，作用是可以灵活地切换模块名。但是使用的时候应单线程调用此接口。
+		如果传入的strClientId是空字符串，那么此字段会有一个默认值：__default__
 	*/
 	int get(const std::string & strClientId, const std::string & strInKey, std::string & strOutResult);
 	int set(const std::string & strClientId, const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
@@ -79,6 +80,7 @@ public:
 	true：操作成功
 	false：操作失败
 	使用说明：此接口添加了strClientId字段，作用是可以灵活地切换模块名。但是使用的时候应单线程调用此接口。
+		如果传入的strClientId是空字符串，那么此字段会有一个默认值：__default__
 	*/
 	int subs(const std::string & strClientId, const std::string & strInKey, subsCallback cb);	//subscribe channel
 	bool unsubs(const std::string & strClientId, const std::string & strInKey);					//unsubscribe channel

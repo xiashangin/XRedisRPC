@@ -102,30 +102,41 @@ void subs_test()
 	//redisC.connect("192.168.31.217", 6379, true);
 
 	redis.subs("A", "hello*", subCB);
+	redis.subs("A", "hello*", subCB);
+	redis.subs("A", "hello*", subCB);
+	redis.subs("B", "hello*", subCB);
+	redis.subs("B", "hello*", subCB);
 	redis.subs("B", "hello*", subCB);
 
-	//只有客户端A收到回调
-	std::string msg;
-	redis.set("A", "helloA", "worldA", msg);
-	redis.set("B", "helloA", "worldA", msg);
-	redis.set("C", "helloA", "worldA", msg);
-	getchar();
+	redis.unsubs("A", "hello*");
+	redis.unsubs("A", "hello*");
+	redis.unsubs("A", "hello*");
+	redis.unsubs("B", "hello*");
+	redis.unsubs("B", "hello*");
+	redis.unsubs("B", "hello*");
 
-	redis.unsubs("A", "hello*");		
-	redis.set("A", "helloA", "worldA", msg);
-	redis.set("B", "helloA", "worldA", msg);
-	redis.set("C", "helloA", "worldA", msg);
-	getchar();
+	////只有客户端A收到回调
+	//std::string msg;
+	//redis.set("A", "helloA", "worldA", msg);
+	//redis.set("B", "helloA", "worldA", msg);
+	//redis.set("C", "helloA", "worldA", msg);
+	//getchar();
 
-	redis.unsubs("B", "hello*");		
-	redis.set("A", "helloA", "worldA", msg);
-	redis.set("B", "helloA", "worldA", msg);
-	redis.set("C", "helloA", "worldA", msg);
-	getchar();
+	//redis.unsubs("A", "hello*");		
+	//redis.set("A", "helloA", "worldA", msg);
+	//redis.set("B", "helloA", "worldA", msg);
+	//redis.set("C", "helloA", "worldA", msg);
+	//getchar();
+
+	//redis.unsubs("B", "hello*");		
+	//redis.set("A", "helloA", "worldA", msg);
+	//redis.set("B", "helloA", "worldA", msg);
+	//redis.set("C", "helloA", "worldA", msg);
+	//getchar();
 
 
-	//只能收到字符串类型的回调
-	redis.push("A", "hellol", "1234", msg);
+	////只能收到字符串类型的回调
+	//redis.push("A", "hellol", "1234", msg);
 	getchar();
 }
 
@@ -163,22 +174,22 @@ void pull_test()
 	redis.push("A", "lhelloA", "worldA", msg);
 	redis.push("B", "lhelloA", "worldA", msg);
 	redis.push("C", "lhelloA", "worldA", msg);
-	getchar();
+	//getchar();
 
 	//redis.unpull("A", "lhello*");
 	redis.push("A", "lhelloA", "worldA", msg);
 	redis.push("B", "lhelloA", "worldA", msg);
 	redis.push("C", "lhelloA", "worldA", msg);
-	getchar();
+	//getchar();
 
 	//redis.unpull("B", "lhello*");
 	redis.push("A", "lhelloA", "worldA", msg);
 	redis.push("B", "lhelloA", "worldA", msg);
 	redis.push("C", "lhelloA", "worldA", msg);
-	getchar();
+	//getchar();
 
 	redis.set("A", "lhellol", "1234", msg);
-	getchar();
+	//getchar();
 
 }
 

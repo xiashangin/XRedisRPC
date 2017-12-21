@@ -21,6 +21,7 @@
 #define REDIS_VALUE_NULL		105		//输入的value值为空
 #define REDIS_KEY_EXISTED		106		//key已被订阅
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
+#define	REDIS_KEY_NOT_EXIST		108		//get或pop的key不存在
 
 typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
 typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
@@ -33,6 +34,7 @@ typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
 class CCacheUtils
 {
 public:
+	//如果传入的strClientID是空字符串，那么此字段会有一个默认值：__default__
 	CCacheUtils(const std::string & strClientId);
 	~CCacheUtils();
 

@@ -21,6 +21,7 @@
 #define REDIS_VALUE_NULL		105		//输入的value值为空
 #define REDIS_KEY_EXISTED		106		//key已被订阅
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
+#define	REDIS_KEY_NOT_EXIST		108		//get或pop的key不存在
 
 typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
 typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
@@ -53,6 +54,7 @@ public:
 	操作结果通过strOutResult获取
 
 	使用说明：此接口添加了strClientId字段，作用是可以灵活地切换模块名。但是使用的时候应单线程调用此接口。
+		如果传入的strClientId是空字符串，那么此字段会有一个默认值：__default__
 	*/
 	int get(const std::string & strClientId, const std::string & strInKey, std::string & strOutResult);
 	int set(const std::string & strClientId, const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
@@ -65,12 +67,20 @@ public:
 	返回值说明：
 	0：操作成功
 	>0：操作失败，返回状态码
+	
+	subs和pull比较：
+	1. subs订阅的是字符串的变化，pull订阅的是list的变化。
+	2. 当set操作发生时，subs回调会收到被set的key和value。
+	del操作发生时，subs回调会收到被删除的key，此时value为空字符串。
+	3. 当push操作发生时，pull回调会收到被push的listName和value。pop操作发生时，pull回调不会收到消息。
+	del操作发生时，pull回调会收到被删除的listName，此时value为空字符串。
 
 	unsubs()	unpull()
 	返回值说明：
 	true：操作成功
 	false：操作失败
 	使用说明：此接口添加了strClientId字段，作用是可以灵活地切换模块名。但是使用的时候应单线程调用此接口。
+		如果传入的strClientId是空字符串，那么此字段会有一个默认值：__default__
 	*/
 	int subs(const std::string & strClientId, const std::string & strInKey, subsCallback cb);	//subscribe channel
 	bool unsubs(const std::string & strClientId, const std::string & strInKey);					//unsubscribe channel

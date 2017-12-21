@@ -36,8 +36,8 @@ bool CRedisRPC::connect(const char* ip, int port)
 	timeval tv = { 3, 500 };
 	m_redisContext = (redisContext *)redisConnectWithTimeout(
 		ip, port, tv);
-	_DEBUGLOG("connect to redis server ip = " << this->m_strIp.c_str() << ", port = "
-		<< this->m_iPort);
+	//_DEBUGLOG("connect to redis server ip = " << this->m_strIp.c_str() << ", port = "
+	//	<< this->m_iPort);
 
 	if ((NULL == m_redisContext) || (m_redisContext->err))
 	{
@@ -66,7 +66,7 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	if (reply && reply->type == REDIS_REPLY_STRING)
 	{
 		heartbeat = reply->str;
-		_DEBUGLOG("heartbeat = " << heartbeat.c_str() << ", now = " << time(NULL));
+		//_DEBUGLOG("heartbeat = " << heartbeat.c_str() << ", now = " << time(NULL));
 		if (time(NULL) - atoi(heartbeat.c_str()) <= HEARTBEATTIMEOUT)
 			bRlt = true;
 	}
@@ -156,7 +156,7 @@ int CRedisRPC::processKey(const char *key)
 	m_strCurrentProcessKey = key;
 	std::thread thTimer(thTimeout, this);
 
-	_DEBUGLOG("等待远程服务处理结果...");
+	//_DEBUGLOG("等待远程服务处理结果...");
 	//processKeyLock.unlock();
 	redisGetReply(m_redisContext, (void **)&reply);
 	if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3 && strcmp(reply->element[2]->str, "set") == 0)
@@ -183,8 +183,8 @@ int CRedisRPC::processKey(const char *key)
 void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
 	const char *heartbeatChnName)
 {
-	_DEBUGLOG("远程服务注册... keys = " << keys << ", reqChlName = " << reqChlName
-		<< ", heartbeatChnName = " << heartbeatChnName);
+	//_DEBUGLOG("远程服务注册... keys = " << keys << ", reqChlName = " << reqChlName
+	//	<< ", heartbeatChnName = " << heartbeatChnName);
 	mapReqchnl::iterator it = m_mapHBChnl.find(std::string(keys));
 	if (it == m_mapHBChnl.end())
 	{
@@ -253,7 +253,7 @@ void* CRedisRPC::thTimeout(void *arg)
 	std::string key = self->m_strCurrentProcessKey;
 
 	int i = 0;
-	_DEBUGLOG("等待远程服务处理...");
+	//_DEBUGLOG("等待远程服务处理...");
 	while (i < 50)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(GET_WAITTIMEOUT / 50));

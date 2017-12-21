@@ -31,49 +31,73 @@ void CClientCacheUtils::disconnect()
 
 int CClientCacheUtils::get(const std::string & strClientId, const std::string & strInKey, std::string & strOutResult)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->get(strInKey, strOutResult);
 }
 
 int CClientCacheUtils::set(const std::string & strClientId, const std::string & strInKey, const std::string & strInValue, std::string & strOutResult)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->set(strInKey, strInValue, strOutResult);
 }
 
 int CClientCacheUtils::push(const std::string & strClientId, const std::string & strInListName, const std::string & strInValue, std::string & strOutResult)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->push(strInListName, strInValue, strOutResult);
 }
 
 int CClientCacheUtils::pop(const std::string & strClientId, const std::string & strInListName, std::string & strOutResult)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->pop(strInListName, strOutResult);
 }
 
 int CClientCacheUtils::subs(const std::string & strClientId, const std::string & strInKey, subsCallback cb)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->subs(strInKey, cb);
 }
 
 bool CClientCacheUtils::unsubs(const std::string & strClientId, const std::string & strInKey)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->unsubs(strInKey);
 }
 
 int CClientCacheUtils::pull(const std::string & strClientId, const std::string & strInKey, pullCallback cb)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->pull(strInKey, cb);
 }
 
 bool CClientCacheUtils::unpull(const std::string & strClientId, const std::string & strInKey)
 {
-	((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	if (strClientId.length() > 0)
+		((CRedis_Utils *)m_redisUtil)->setClientId(strClientId);
+	else
+		((CRedis_Utils *)m_redisUtil)->setClientId(DEFAULT_CLIENTID);
 	return ((CRedis_Utils *)m_redisUtil)->unpull(strInKey);
 }
 

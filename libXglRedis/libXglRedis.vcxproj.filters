@@ -50,7 +50,9 @@
     <ClCompile Include="CacheUtils.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ClientCacheUtils.cpp" />
+    <ClCompile Include="ClientCacheUtils.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\uuid\uuid4.h">

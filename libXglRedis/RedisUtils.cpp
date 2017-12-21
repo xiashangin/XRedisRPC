@@ -7,7 +7,7 @@ CRedis_Utils::CRedis_Utils(const std::string & strClientID)
 	if (strClientID.length() > 0)
 		this->m_strClientId = strClientID;
 	else
-		this->m_strClientId = "default";
+		this->m_strClientId = DEFAULT_CLIENTID;
 	m_redisRPC.setClientId(m_strClientId);
 }
 
@@ -95,7 +95,7 @@ void* CRedis_Utils::thAsyncSubsAll(void *arg)
 	redisAsyncSetDisconnectCallback(self->m_pRedisAsyncContext, CRedis_Utils::disconnectCallback);
 	std::string cmd = std::string(R_PSUBS) + std::string(" ") + std::string(R_KEYSPACE) + std::string("*");
 	redisAsyncCommand(self->m_pRedisAsyncContext, subsAllCallback, self, cmd.c_str()/*"PSUBSCRIBE __keyspace@0__:*"*/);
-	_DEBUGLOG("subscribe redis keyspace notification!!! cmd = " << cmd.c_str());
+	//_DEBUGLOG("subscribe redis keyspace notification!!! cmd = " << cmd.c_str());
 
 #ifdef _WIN32
 	aeMain(self->m_loop);
@@ -123,7 +123,7 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 	bool bRlt = false;
 	std::string new_key = genNewKey(strInKey.c_str());
 	std::string cmd = std::string(R_GET) + std::string(" ") + std::string(new_key);
-	_DEBUGLOG("get cmd = " << cmd.c_str());
+	//_DEBUGLOG("get cmd = " << cmd.c_str());
 	if(!m_redisRPC.isServiceModelAvailable(new_key.c_str()) /*|| !m_redisRPC.isKeySubs(new_key.c_str())*/)
 	{
 		//get失败(nil也表示失败) 该key值不需要处理或者没有可用服务
@@ -139,22 +139,15 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 	} 
 
 	//远程调用处理数据
-	_DEBUGLOG("process the key before return.   key-->" << new_key.c_str());
 	int iRlt = m_redisRPC.processKey(new_key.c_str());
-	_DEBUGLOG("process the key, job done.   key-->" << new_key.c_str());
-	//if (iRlt == 0)
-	//	m_strLastGetKey = "";
+
 	//返回数据
-	//m_getLock.lock();
 	bRlt = sendCmd(cmd, strOutResult);
 	m_getLock.unlock();
 	if (bRlt && strOutResult.length() <= 0)		//键在redis中找不到
 		return REDIS_KEY_NOT_EXIST;
 	return iRlt;
-	//if (bRlt)
-	//	return strOutResult.length();
-	//else
-	//	return -1;
+
 }
 
 int CRedis_Utils::set(const std::string & strInKey, const std::string & strInValue, std::string & strOutResult)
@@ -176,7 +169,7 @@ int CRedis_Utils::set(const std::string & strInKey, const std::string & strInVal
 	std::string cmd = std::string(R_SET) + std::string(" ") 
 		+ new_key + std::string(" ") + strInValue;
 
-	_DEBUGLOG("set cmd = " << cmd.c_str());
+	//_DEBUGLOG("set cmd = " << cmd.c_str());
 	bRlt = sendCmd(cmd, strOutResult);
 	m_setLock.unlock();
 	if (bRlt)
@@ -202,7 +195,7 @@ int CRedis_Utils::push(const std::string & strInListName, const std::string & st
 	std::string new_list_name = genNewKey(strInListName);
 	std::string cmd = std::string(R_PUSH) + std::string(" ")
 		+ new_list_name + std::string(" ") + strInValue;
-	_DEBUGLOG("push cmd = " << cmd.c_str());
+	//_DEBUGLOG("push cmd = " << cmd.c_str());
 	bool bRlt = sendCmd(cmd, strOutResult);
 	m_pushLock.unlock();
 	if (bRlt)
@@ -227,7 +220,7 @@ int CRedis_Utils::pop(const std::string & strInListName, std::string & strOutRes
 	m_popLock.lock();
 	std::string new_list_name = genNewKey(strInListName);
 	std::string cmd = std::string(R_POP) + std::string(" ") + new_list_name;
-	_DEBUGLOG("pop cmd = " << cmd.c_str());
+	//_DEBUGLOG("pop cmd = " << cmd.c_str());
 	bool bRlt = sendCmd(cmd, strOutResult);
 	m_popLock.unlock();
 	if (bRlt && strOutResult.length() > 0)
@@ -525,7 +518,7 @@ void CRedis_Utils::close()
 		
 		aeStop(m_loop);
 		m_loop = nullptr;
-		_DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());
+		//_DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());
 		_DEBUGLOG("wait for asyncThread quit... id --> " << m_strClientId.c_str());
 		if (thAsyncKeyNotify.joinable())
 			thAsyncKeyNotify.join();
@@ -584,11 +577,11 @@ bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutRes
 	strOutResult.clear();
 	bool bRlt = false;
 	//m_aeStopLock.lock();
-	int64_t now = GetSysTimeMicros();
-	_DEBUGLOG("start send cmd now = " << now);
+	//int64_t now = GetSysTimeMicros();
+	//_DEBUGLOG("start send cmd now = " << now);
 	redisReply *pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());  //执行INFO命令
-	_DEBUGLOG("send cmd complete interval = " << GetSysTimeMicros() - now);
-	hiredisOneOpTime.push_back(GetSysTimeMicros() - now);
+	//_DEBUGLOG("send cmd complete interval = " << GetSysTimeMicros() - now);
+	//hiredisOneOpTime.push_back(GetSysTimeMicros() - now);
 	//m_aeStopLock.unlock();
 	//错误处理!!!
 	if (!pRedisReply)
@@ -624,8 +617,8 @@ bool CRedis_Utils::replyCheck(redisReply *pRedisReply, std::string & strOutResul
 
 	switch (pRedisReply->type) {
 	case REDIS_REPLY_STATUS:		//表示状态，内容通过str字段查看，字符串长度是len字段
-		_DEBUGLOG("type:REDIS_REPLY_STATUS, reply->len:" 
-			<< pRedisReply->len << ", reply->str:" << pRedisReply->str);
+		//_DEBUGLOG("type:REDIS_REPLY_STATUS, reply->len:" 
+		//	<< pRedisReply->len << ", reply->str:" << pRedisReply->str);
 		strOutResult = pRedisReply->str;
 		break;
 	case REDIS_REPLY_ERROR:			//表示出错，查看出错信息，如上的str,len字段
@@ -635,7 +628,7 @@ bool CRedis_Utils::replyCheck(redisReply *pRedisReply, std::string & strOutResul
 		strOutResult = pRedisReply->str;
 		break;
 	case REDIS_REPLY_INTEGER:		//返回整数，从integer字段获取值
-		_DEBUGLOG("type:REDIS_REPLY_INTEGER, reply->integer:" << pRedisReply->integer);
+		//_DEBUGLOG("type:REDIS_REPLY_INTEGER, reply->integer:" << pRedisReply->integer);
 		strOutResult = int2str(pRedisReply->integer);
 		break;
 	case REDIS_REPLY_NIL:			//没有数据返回
@@ -643,20 +636,20 @@ bool CRedis_Utils::replyCheck(redisReply *pRedisReply, std::string & strOutResul
 		_DEBUGLOG("type:REDIS_REPLY_NIL, no data");
 		break;
 	case REDIS_REPLY_STRING:		//返回字符串，查看str,len字段
-		_DEBUGLOG("type:REDIS_REPLY_STRING, reply->len:"
-			<< pRedisReply->len << ", reply->str:" << pRedisReply->str); 
+		//_DEBUGLOG("type:REDIS_REPLY_STRING, reply->len:"
+		//	<< pRedisReply->len << ", reply->str:" << pRedisReply->str); 
 		strOutResult = pRedisReply->str;
 		break;
 	case REDIS_REPLY_ARRAY:			//返回一个数组，查看elements的值（数组个数），通过element[index]的方式访问数组元素，每个数组元素是一个redisReply对象的指针
-		_DEBUGLOG("------------------------------------------------------------");
-		_DEBUGLOG("type:REDIS_REPLY_ARRAY, reply->elements:" << pRedisReply->elements);
+		//_DEBUGLOG("------------------------------------------------------------");
+		//_DEBUGLOG("type:REDIS_REPLY_ARRAY, reply->elements:" << pRedisReply->elements);
 		for (int i = 0; i < pRedisReply->elements; i++) {
 			//printf("%d: %s\n", i, pRedisReply->element[i]->str);
 			std::string strRlt;
 			replyCheck(pRedisReply->element[i], strRlt);
 			strOutResult.append(strRlt);
 		}
-		_DEBUGLOG("------------------------------------------------------------");
+		//_DEBUGLOG("------------------------------------------------------------");
 		break;
 	default:
 		_WARNLOG("unkonwn type : " << pRedisReply->type);
@@ -693,14 +686,14 @@ void CRedis_Utils::subsAllCallback(redisAsyncContext *c, void *r, void *data)
 	redisReply *reply = (redisReply *)r;
 	if (reply == NULL) return;
 	if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
-		_DEBUGLOG("Received[%s " << self->m_strIp.c_str() << "] channel" 
-			<< reply->element[1]->str << ": " << reply->element[2]->integer);
+		//_DEBUGLOG("Received[%s " << self->m_strIp.c_str() << "] channel" 
+		//	<< reply->element[1]->str << ": " << reply->element[2]->integer);
 	}
 	else if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 4) {
 		std::string key = split(reply->element[2]->str, "__:")[1];
-		_DEBUGLOG("Received[ " << self->m_strIp.c_str() << "] channel"
-			<< reply->element[1]->str << " -- " << key.c_str()
-			<< " : " << reply->element[3]->str);
+		//_DEBUGLOG("Received[ " << self->m_strIp.c_str() << "] channel"
+		//	<< reply->element[1]->str << " -- " << key.c_str()
+		//	<< " : " << reply->element[3]->str);
 		self->callSubsCB(key, reply->element[3]->str);
 	}
 }
@@ -718,7 +711,6 @@ bool CRedis_Utils::getReq(std::string strInKey)
 
 	std::string strRlt;
 	replyCheck(reply, strRlt);
-	_DEBUGLOG("funckskdjalda sakdja = " << strRlt.c_str());
 	if (strRlt.length() == 3 && strRlt.find("0") == std::string::npos)
 		return false;
 	else
@@ -767,7 +759,7 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 					if (sendCmd(popCmd, sRlt))
 						it_pull->second(old_key, sRlt);
 				}
-				else if (strcmp(strInKeyOp.c_str(), "rpop") == 0)
+				else if (strcmp(strInKeyOp.c_str(), "del") == 0)
 					it_pull->second(old_key, "");
 			}
 			
@@ -777,8 +769,8 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 	m_reqLock.lock();
 	if (this->m_mapReqChnl.size() > 0)	//请求队列
 	{ 
-		_DEBUGLOG("key = " << strInKey.c_str() << ", op = " << strInKeyOp.c_str()
-			<< ", get reqlist...");
+		//_DEBUGLOG("key = " << strInKey.c_str() << ", op = " << strInKeyOp.c_str()
+		//	<< ", get reqlist...");
 		mapReqCB::iterator it_req = m_mapReqChnl.begin();
 		for (; it_req != m_mapReqChnl.end(); ++it_req)
 		{
@@ -811,13 +803,6 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 					}
 					else
 						_DEBUGLOG("该key已经被处理... key = " << strInKey.c_str());
-					//if (get_key == m_strLastGetKey)
-					//	DEBUGLOG("重复key,不处理... key = " << get_key.c_str()
-					//		<< ", LastGetKey = " << m_strLastGetKey.c_str());
-					//else
-					//{
-					//	m_strLastGetKey = get_key;
-					//}
 				}
 			}
 		}
