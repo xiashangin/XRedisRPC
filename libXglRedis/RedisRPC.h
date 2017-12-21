@@ -19,7 +19,7 @@ extern "C"
 #include <hiredis/adapters/ae.h>
 }
 #else
-#include "common_tool.h"
+#include "CommonTools.h"
 #include <hiredis/adapters/libevent.h>
 #endif
 
