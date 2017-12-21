@@ -54,7 +54,6 @@ extern "C"
 #define HEARTBEATINTERVAL	3
 #define GET_WAITTIMEOUT 10000
 
-
 #define REDIS_TIMEOUT			100		//业务模块处理超时
 #define REDIS_NOSERVICE			101		//无业务处理模块
 #define REDIS_SENDREQFAIL		102		//发送请求失败
@@ -64,6 +63,7 @@ extern "C"
 #define REDIS_VALUE_NULL		105		//输入的value值为空
 #define REDIS_KEY_EXISTED		106		//key已被订阅
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
+#define	REDIS_KEY_NOT_EXIST		108		//get或pop的key不存在
 
 typedef std::map<std::string, std::string>		mapReqchnl;	//getkey-->requestChnl
 typedef std::map<std::string, std::string>		mapHBchnl;	//getkey-->HeartBeatChnl

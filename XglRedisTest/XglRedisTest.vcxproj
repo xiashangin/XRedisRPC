@@ -152,7 +152,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="XglRedisTest.cpp" />
+    <ClCompile Include="RedisUtilsTest.h" />
+    <ClCompile Include="XglCacheTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libXglRedis\libXglRedis.vcxproj">
@@ -161,6 +162,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CacheUtils.h" />
+    <ClInclude Include="CacheUtilsTest.h" />
+    <ClInclude Include="ClientCacheUtils.h" />
+    <ClInclude Include="ClientCacheUtilsTest.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

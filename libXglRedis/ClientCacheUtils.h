@@ -31,11 +31,11 @@ typedef std::map<std::string, subsCallback> mapSubsCB;		//subkey-->subfunc
 typedef std::map<std::string, pullCallback> mapPullCB;		//pullkey-->subfunc
 typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
 
-class CCacheUtils
+class CClientCacheUtils
 {
 public:
-	CCacheUtils(const std::string & strClientId);
-	~CCacheUtils();
+	CClientCacheUtils();
+	~CClientCacheUtils();
 
 	//客户端基本操作函数
 	/*
@@ -52,11 +52,13 @@ public:
 	0：操作成功
 	>0：操作失败，返回状态码
 	操作结果通过strOutResult获取
+
+	使用说明：此接口添加了strClientId字段，作用是可以灵活地切换模块名。但是使用的时候应单线程调用此接口。
 	*/
-	int get(const std::string & strInKey, std::string & strOutResult);
-	int set(const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
-	int push(const std::string & strInListName, const std::string & strInValue, std::string & strOutResult);
-	int pop(const std::string & strInListName, std::string & strOutResult);
+	int get(const std::string & strClientId, const std::string & strInKey, std::string & strOutResult);
+	int set(const std::string & strClientId, const std::string & strInKey, const std::string & strInValue, std::string & strOutResult);
+	int push(const std::string & strClientId, const std::string & strInListName, const std::string & strInValue, std::string & strOutResult);
+	int pop(const std::string & strClientId, const std::string & strInListName, std::string & strOutResult);
 
 	//redis订阅功能
 	/*
@@ -64,7 +66,7 @@ public:
 	返回值说明：
 	0：操作成功
 	>0：操作失败，返回状态码
-
+	
 	subs和pull比较：
 	1. subs订阅的是字符串的变化，pull订阅的是list的变化。
 	2. 当set操作发生时，subs回调会收到被set的key和value。
@@ -76,31 +78,12 @@ public:
 	返回值说明：
 	true：操作成功
 	false：操作失败
+	使用说明：此接口添加了strClientId字段，作用是可以灵活地切换模块名。但是使用的时候应单线程调用此接口。
 	*/
-	int subs(const std::string & strInKey, subsCallback cb);	//subscribe channel
-	bool unsubs(const std::string & strInKey);					//unsubscribe channel
-	int pull(const std::string & strInKey, pullCallback cb);	//pull list
-	bool unpull(const std::string & strInKey);					//unpull list, like unsubs
-
-	//业务处理模块
-	/*
-	subsClientGetOp()
-	返回值说明：
-	0：操作成功
-	>0：操作失败，返回状态码
-
-	notifyRlt()
-	返回值说明：
-	0：操作成功
-	>0：操作失败，返回状态码
-	作用：处理完成请求之后通过此函数通知客户端
-	使用说明：业务处理模块中的回调函数(clientOpCallBack)处理完客户请求之后，使用
-		此函数将处理结果通知客户端。
-	*/
-	int subsClientGetOp(const std::string & strInKey, clientOpCallBack cb);
-	bool unsubClientGetOp(const std::string & strInKey);							//注销监听客户端get key操作
-	void stopSubClientGetOp();														//取消监听客户端全部get操作
-	int notifyRlt(const std::string & strInKey, const std::string & strInValue);	//通知客户端处理完成
+	int subs(const std::string & strClientId, const std::string & strInKey, subsCallback cb);	//subscribe channel
+	bool unsubs(const std::string & strClientId, const std::string & strInKey);					//unsubscribe channel
+	int pull(const std::string & strClientId, const std::string & strInKey, pullCallback cb);	//pull list
+	bool unpull(const std::string & strClientId, const std::string & strInKey);					//unpull list, like unsubs
 
 	void log(const int iLogType, const std::string & strLog);
 protected:

@@ -33,7 +33,7 @@ typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
 class CCacheUtils
 {
 public:
-	CCacheUtils(std::string strClientId);
+	CCacheUtils(const std::string & strClientId);
 	~CCacheUtils();
 
 	//客户端基本操作函数
@@ -63,6 +63,13 @@ public:
 	返回值说明：
 	0：操作成功
 	>0：操作失败，返回状态码
+
+	subs和pull比较：
+	1. subs订阅的是字符串的变化，pull订阅的是list的变化。
+	2. 当set操作发生时，subs回调会收到被set的key和value。
+	del操作发生时，subs回调会收到被删除的key，此时value为空字符串。
+	3. 当push操作发生时，pull回调会收到被push的listName和value。pop操作发生时，pull回调不会收到消息。
+	del操作发生时，pull回调会收到被删除的listName，此时value为空字符串。
 
 	unsubs()	unpull()
 	返回值说明：

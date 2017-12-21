@@ -2,7 +2,7 @@
 #include "CacheUtils.h"
 
 
-CCacheUtils::CCacheUtils(std::string strClientId)
+CCacheUtils::CCacheUtils(const std::string & strClientId)
 {
 	m_redisUtil = new CRedis_Utils(strClientId);
 	if (g_ECGLogger == nullptr)

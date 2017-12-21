@@ -148,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CacheUtils.cpp" />
+    <ClCompile Include="ClientCacheUtils.cpp" />
     <ClCompile Include="CommonTools.cpp" />
     <ClCompile Include="include\log\MyLogger.cpp" />
     <ClCompile Include="include\redis_ae\adlist.c" />
@@ -159,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CacheUtils.h" />
+    <ClInclude Include="ClientCacheUtils.h" />
     <ClInclude Include="CommonTools.h" />
     <ClInclude Include="include\log\MyLogger.h" />
     <ClInclude Include="include\uuid\uuid4.h" />

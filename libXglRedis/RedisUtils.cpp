@@ -1,6 +1,6 @@
 #include "RedisUtils.h"
 
-CRedis_Utils::CRedis_Utils(std::string strClientID)
+CRedis_Utils::CRedis_Utils(const std::string & strClientID)
 {
 	this->m_bIsConnected = false;
 	//this->m_strLastGetKey = "";
@@ -131,10 +131,11 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 		_DEBUGLOG("no available service-->" << new_key.c_str());
 		bRlt = sendCmd(cmd, strOutResult);
 		m_getLock.unlock();
-		if (bRlt)
+		if (bRlt && strOutResult.length() > 0)
 			return 0;
-		else
-			return REDIS_NOSERVICE;
+		if (bRlt && strOutResult.length() <= 0)
+			return REDIS_KEY_NOT_EXIST;
+		return REDIS_NOSERVICE;
 	} 
 
 	//远程调用处理数据
@@ -147,6 +148,8 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 	//m_getLock.lock();
 	bRlt = sendCmd(cmd, strOutResult);
 	m_getLock.unlock();
+	if (bRlt && strOutResult.length() <= 0)		//键在redis中找不到
+		return REDIS_KEY_NOT_EXIST;
 	return iRlt;
 	//if (bRlt)
 	//	return strOutResult.length();
@@ -227,10 +230,11 @@ int CRedis_Utils::pop(const std::string & strInListName, std::string & strOutRes
 	_DEBUGLOG("pop cmd = " << cmd.c_str());
 	bool bRlt = sendCmd(cmd, strOutResult);
 	m_popLock.unlock();
-	if (bRlt)
+	if (bRlt && strOutResult.length() > 0)
 		return 0;
-	else 
-		return REDIS_CMD_ERR;
+	if (bRlt && strOutResult.length() <= 0)
+		return REDIS_KEY_NOT_EXIST;
+	return REDIS_CMD_ERR;
 }
 
 int CRedis_Utils::subs(const std::string & strInKey, subsCallback cb)
@@ -493,6 +497,11 @@ int CRedis_Utils::notifyRlt(const std::string & strInKey, const std::string & st
 	return set(strInKey, strInValue, strRlt);
 }
 
+void CRedis_Utils::setClientId(const std::string & strClientId)
+{
+	m_strClientId = strClientId;
+}
+
 int CRedis_Utils::getAvgOpTime()
 {
 	return std::accumulate(hiredisOneOpTime.begin(), hiredisOneOpTime.end(), 0) / hiredisOneOpTime.size();
@@ -572,6 +581,7 @@ std::string CRedis_Utils::getOldKey(const std::string & new_key)
 
 bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutResult)
 {
+	strOutResult.clear();
 	bool bRlt = false;
 	//m_aeStopLock.lock();
 	int64_t now = GetSysTimeMicros();
@@ -757,9 +767,10 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 					if (sendCmd(popCmd, sRlt))
 						it_pull->second(old_key, sRlt);
 				}
+				else if (strcmp(strInKeyOp.c_str(), "rpop") == 0)
+					it_pull->second(old_key, "");
 			}
-			else if (strcmp(strInKeyOp.c_str(), "del") == 0)
-				it_pull->second(old_key, "");
+			
 		}
 	}
 	m_pullLock.unlock();

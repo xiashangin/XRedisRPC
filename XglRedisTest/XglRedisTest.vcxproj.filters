@@ -18,12 +18,24 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="XglRedisTest.cpp">
+    <ClCompile Include="XglCacheTest.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RedisUtilsTest.h">
+      <Filter>头文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CacheUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CacheUtilsTest.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientCacheUtilsTest.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientCacheUtils.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
