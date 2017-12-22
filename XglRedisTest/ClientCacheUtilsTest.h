@@ -96,6 +96,18 @@ void subCB(const std::string & strKey, const std::string & strValue, void * reid
 		logInfo << "got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str();
 	setLog(LOG_DEBUG, logInfo);
 }
+
+#include <fstream>
+std::string readFileIntoString(const char * filename)
+{
+	std::ifstream ifile(filename);
+	std::ostringstream buf;
+	char ch;
+	while (buf && ifile.get(ch))
+		buf.put(ch);
+	return buf.str();
+}
+
 void subs_test()
 {
 	CClientCacheUtils redis;
@@ -114,6 +126,13 @@ void subs_test()
 		setLog(LOG_DEBUG, logInfo);
 	};
 
+	std::string ss, sRlt;
+	ss = readFileIntoString("TEMP.json");
+	redis.set("A", "temp123", ss, sRlt);
+	redis.get("A", "temp123", sRlt);
+	logInfo << sRlt;
+	setLog(LOG_DEBUG, logInfo);
+
 	redis.subs("A", "hello*", f);
 	redis.subs("A", "hello*", f);
 	redis.subs("A", "hello*", f);
@@ -121,6 +140,7 @@ void subs_test()
 	redis.subs("B", "hello*", f);
 	redis.subs("B", "hello*", f);
 	getchar();
+
 	redis.unsubs("A", "hello*");
 	redis.unsubs("A", "hello*");
 	redis.unsubs("A", "hello*");

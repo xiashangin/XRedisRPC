@@ -166,8 +166,8 @@ int CRedis_Utils::set(const std::string & strInKey, const std::string & strInVal
 	m_setLock.lock();
 	bool bRlt = false;
 	std::string new_key = genNewKey(strInKey);
-	std::string cmd = std::string(R_SET) + std::string(" ") 
-		+ new_key + std::string(" ") + strInValue;
+	std::string cmd = std::string(R_SET) + COMMAND_SPLIT
+		+ new_key + COMMAND_SPLIT + strInValue;
 
 	//_DEBUGLOG("set cmd = " << cmd.c_str());
 	bRlt = sendCmd(cmd, strOutResult);
@@ -193,8 +193,8 @@ int CRedis_Utils::push(const std::string & strInListName, const std::string & st
 	}
 	m_pushLock.lock();
 	std::string new_list_name = genNewKey(strInListName);
-	std::string cmd = std::string(R_PUSH) + std::string(" ")
-		+ new_list_name + std::string(" ") + strInValue;
+	std::string cmd = std::string(R_PUSH) + COMMAND_SPLIT
+		+ new_list_name + COMMAND_SPLIT + strInValue;
 	//_DEBUGLOG("push cmd = " << cmd.c_str());
 	bool bRlt = sendCmd(cmd, strOutResult);
 	m_pushLock.unlock();
@@ -579,7 +579,17 @@ bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutRes
 	//m_aeStopLock.lock();
 	//int64_t now = GetSysTimeMicros();
 	//_DEBUGLOG("start send cmd now = " << now);
-	redisReply *pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());  //÷¥––INFO√¸¡Ó
+	std::vector<std::string> vecStr = split(strInCmd, COMMAND_SPLIT);
+	std::string value = "", cmd = "";
+	redisReply *pRedisReply = nullptr;
+	if (vecStr.size() == 3)
+	{
+		value = vecStr[2];
+		cmd = vecStr[0] + " " + vecStr[1] + " %s";
+		pRedisReply = (redisReply*)redisCommand(m_pRedisContext, cmd.c_str(), value.c_str());  //÷¥––INFO√¸¡Ó
+	}
+	else
+		pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());  //÷¥––INFO√¸¡Ó
 	//_DEBUGLOG("send cmd complete interval = " << GetSysTimeMicros() - now);
 	//hiredisOneOpTime.push_back(GetSysTimeMicros() - now);
 	//m_aeStopLock.unlock();
@@ -590,7 +600,11 @@ bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutRes
 			<< ", try to reconnect...");
 		m_bIsConnected = false;
 		_connect(m_strIp, m_iPort);
-		pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());
+		if (vecStr.size() == 3)
+			pRedisReply = (redisReply*)redisCommand(m_pRedisContext, cmd.c_str(), value.c_str());  //÷¥––INFO√¸¡Ó
+		else
+			pRedisReply = (redisReply*)redisCommand(m_pRedisContext, strInCmd.c_str());  //÷¥––INFO√¸¡Ó
+
 		if (pRedisReply)
 		{
 			if (replyCheck(pRedisReply, strOutResult))
@@ -701,8 +715,8 @@ void CRedis_Utils::subsAllCallback(redisAsyncContext *c, void *r, void *data)
 bool CRedis_Utils::getReq(std::string strInKey)
 {
 	std::string getProcessCmd = R_GET + std::string(" ") + strInKey + std::string(REQPROCESSING);
-	std::string setProcessingCmd = R_SET + std::string(" ") + strInKey + std::string(REQPROCESSING)
-		+ std::string(" ") + std::string("1");
+	std::string setProcessingCmd = R_SET + std::string(COMMAND_SPLIT) + strInKey + std::string(REQPROCESSING)
+		+ std::string(COMMAND_SPLIT) + std::string("1");
 	std::string getRlt, setRlt;
 	redisCommand(m_pRedisContext, "MULTI");
 	sendCmd(getProcessCmd, getRlt);

@@ -3,6 +3,7 @@
 #include "RedisRPC.h"
 #include <functional>
 #define DEFAULT_CLIENTID		"__default__"
+#define COMMAND_SPLIT			"&&&_&&&"
 
 typedef std::function<void(const std::string & , const std::string & )> subsCallback;
 typedef std::function<void(const std::string & , const std::string &)> pullCallback;
