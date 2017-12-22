@@ -104,7 +104,7 @@ public:
 	void stopSubClientGetOp();														//取消监听客户端全部get操作
 	int notifyRlt(const std::string & strInKey, const std::string & strInValue);	//通知客户端处理完成
 
-	void log(const int iLogType, const std::string & strLog);
+	static void log(const int iLogType, const std::string & strLog);
 protected:
 	void * m_redisUtil;
 };

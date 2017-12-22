@@ -12,10 +12,9 @@ std::string int2str(const int &int_temp)
 }
 
 std::ostringstream logInfo;
-CCacheUtils logUtil("log");
 void setLog(int iLogType, std::ostringstream & strLogInfo)
 {
-	logUtil.log(iLogType, strLogInfo.str());
+	CCacheUtils::log(iLogType, strLogInfo.str());
 	strLogInfo.str("");
 }
 

@@ -89,7 +89,7 @@ public:
 	int pull(const std::string & strClientId, const std::string & strInKey, pullCallback cb);	//pull list
 	bool unpull(const std::string & strClientId, const std::string & strInKey);					//unpull list, like unsubs
 
-	void log(const int iLogType, const std::string & strLog);
+	static void log(const int iLogType, const std::string & strLog);
 protected:
 	void * m_redisUtil;
 };
