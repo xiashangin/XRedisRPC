@@ -37,7 +37,7 @@ class CCacheUtils
 {
 public:
 	//如果传入的strClientID是空字符串，那么此字段会有一个默认值：__default__
-	static std::shared_ptr<CCacheUtils> createInstance(std::string &strClientId);
+	static std::shared_ptr<CCacheUtils> createInstance(const std::string &strClientId);
 	~CCacheUtils();
 
 	//客户端基本操作函数
@@ -105,6 +105,26 @@ public:
 	void stopSubClientGetOp();														//取消监听客户端全部get操作
 	int notifyRlt(const std::string & strInKey, const std::string & strInValue);	//通知客户端处理完成
 
+	/**日志接口，ilogType定义如下：
+	LOG_INFO		0
+	LOG_TRACE		1
+	LOG_DEBUG		2
+	LOG_WARN		3
+	LOG_ERROR		4
+	LOG_FATAL		5
+
+	一个使用例子：
+	std::ostringstream logInfo;
+	void setLog(int iLogType, std::ostringstream & strLogInfo)
+	{
+	CClientCacheUtils::log(iLogType, strLogInfo.str());
+	strLogInfo.str("");
+	}
+
+	std::string result = "log test...";
+	logInfo << "log test, result = " << result;
+	setLog(LOG_DEBUG, logInfo.str());
+	**/
 	static void log(const int iLogType, const std::string & strLog);
 protected:
 	CCacheUtils(const std::string & strClientId);
