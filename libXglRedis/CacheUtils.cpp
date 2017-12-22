@@ -10,6 +10,11 @@ CCacheUtils::CCacheUtils(const std::string & strClientId)
 }
 
 
+std::shared_ptr<CCacheUtils> CCacheUtils::createInstance(std::string &strClientId)
+{
+	return shared_ptr<CCacheUtils>(new CCacheUtils(strClientId));
+}
+
 CCacheUtils::~CCacheUtils()
 {
 	if (m_redisUtil != nullptr)

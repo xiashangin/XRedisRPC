@@ -126,12 +126,7 @@ void subs_test()
 		setLog(LOG_DEBUG, logInfo);
 	};
 
-	std::string ss, sRlt;
-	ss = readFileIntoString("TEMP.json");
-	redis.set("A", "temp123", ss, sRlt);
-	redis.get("A", "temp123", sRlt);
-	logInfo << sRlt;
-	setLog(LOG_DEBUG, logInfo);
+
 
 	redis.subs("A", "hello*", f);
 	redis.subs("A", "hello*", f);
@@ -139,6 +134,13 @@ void subs_test()
 	redis.subs("B", "hello*", f);
 	redis.subs("B", "hello*", f);
 	redis.subs("B", "hello*", f);
+	getchar();
+
+	std::string ss, sRlt;
+	ss = readFileIntoString("TEMP.json");
+	redis.set("A", "hello123", ss, sRlt);
+	logInfo << sRlt;
+	setLog(LOG_DEBUG, logInfo);
 	getchar();
 
 	redis.unsubs("A", "hello*");

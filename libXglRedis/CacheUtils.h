@@ -1,8 +1,9 @@
 #pragma once
 
-#include <map>
-#include <string>
 #include <functional>
+#include <map>
+#include <memory>
+#include <string>
 
 //日志类型
 #define LOG_INFO		0
@@ -36,7 +37,7 @@ class CCacheUtils
 {
 public:
 	//如果传入的strClientID是空字符串，那么此字段会有一个默认值：__default__
-	CCacheUtils(const std::string & strClientId);
+	static std::shared_ptr<CCacheUtils> createInstance(std::string &strClientId);
 	~CCacheUtils();
 
 	//客户端基本操作函数
@@ -106,6 +107,7 @@ public:
 
 	static void log(const int iLogType, const std::string & strLog);
 protected:
+	CCacheUtils(const std::string & strClientId);
 	void * m_redisUtil;
 };
 
