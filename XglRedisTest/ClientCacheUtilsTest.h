@@ -4,7 +4,6 @@
 #include <thread>
 #include <sstream>
 
-#include <windows.h>
 std::string int2str(const int &int_temp)
 {
 	std::string str;
@@ -85,9 +84,12 @@ void test_pop(CClientCacheUtils & redis)
 	}
 }
 
-void subCB(const std::string & strKey, const std::string & strValue)
+void subCB(const std::string & strKey, const std::string & strValue, void * reids)
 {
-	logInfo << "client got subs msg!!!";
+	CClientCacheUtils *utils = (CClientCacheUtils *)reids;
+	std::string str;
+	utils->get("A", "hello123", str);
+	logInfo << "client got subs msg!!! str = " << str;
 	setLog(LOG_DEBUG, logInfo);
 	if (strValue.length() == 0)
 		logInfo << "key = " << strKey.c_str() << ", was deleted...";
@@ -101,13 +103,25 @@ void subs_test()
 	redis.connect(REDISIP, REDISPORT, true);
 	//redisC.connect("192.168.31.217", 6379, true);
 
-	redis.subs("A", "hello*", subCB);
-	redis.subs("A", "hello*", subCB);
-	redis.subs("A", "hello*", subCB);
-	redis.subs("B", "hello*", subCB);
-	redis.subs("B", "hello*", subCB);
-	redis.subs("B", "hello*", subCB);
+	auto f = [&redis](const std::string & strKey, const std::string & strValue)->void {
+		std::string str;
+		redis.get("A", "hello123", str);
+		logInfo << "client got subs msg!!! str = " << str;
+		setLog(LOG_DEBUG, logInfo);
+		if (strValue.length() == 0)
+			logInfo << "key = " << strKey.c_str() << ", was deleted...";
+		else
+			logInfo << "got subcb msg, key = " << strKey.c_str() << ", value = " << strValue.c_str();
+		setLog(LOG_DEBUG, logInfo);
+	};
 
+	redis.subs("A", "hello*", f);
+	redis.subs("A", "hello*", f);
+	redis.subs("A", "hello*", f);
+	redis.subs("B", "hello*", f);
+	redis.subs("B", "hello*", f);
+	redis.subs("B", "hello*", f);
+	getchar();
 	redis.unsubs("A", "hello*");
 	redis.unsubs("A", "hello*");
 	redis.unsubs("A", "hello*");

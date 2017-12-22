@@ -1,12 +1,13 @@
 #pragma once
 
 #include "RedisRPC.h"
-
+#include <functional>
 #define DEFAULT_CLIENTID		"__default__"
 
-typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
-typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
-typedef void(*clientOpCallBack)(const std::string & strKey, const std::string & strValue);
+typedef std::function<void(const std::string & , const std::string & )> subsCallback;
+typedef std::function<void(const std::string & , const std::string &)> pullCallback;
+typedef std::function<void(const std::string & , const std::string &)> clientOpCallBack;
+
 
 typedef std::map<std::string, subsCallback> mapSubsCB;		//subkey-->subfunc
 typedef std::map<std::string, pullCallback> mapPullCB;		//pullkey-->subfunc

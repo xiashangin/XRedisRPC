@@ -27,8 +27,8 @@ int main(int argc, char const *argv[])
 	//test_push(redis);
 	//test_pop(redis);
 
-	//subs_test();
-	pull_test();
+	subs_test();
+	//pull_test();
 
 	getchar();
 	return 0;

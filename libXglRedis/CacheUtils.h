@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <functional>
 
 //日志类型
 #define LOG_INFO		0
@@ -23,9 +24,9 @@
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
 #define	REDIS_KEY_NOT_EXIST		108		//get或pop的key不存在
 
-typedef void(*subsCallback)(const std::string & strKey, const std::string & strValue);
-typedef void(*pullCallback)(const std::string & strKey, const std::string & strValue);
-typedef void(*clientOpCallBack)(const std::string & strKey, const std::string & strValue);
+typedef std::function<void(const std::string &, const std::string &)> subsCallback;
+typedef std::function<void(const std::string &, const std::string &)> pullCallback;
+typedef std::function<void(const std::string &, const std::string &)> clientOpCallBack;
 
 typedef std::map<std::string, subsCallback> mapSubsCB;		//subkey-->subfunc
 typedef std::map<std::string, pullCallback> mapPullCB;		//pullkey-->subfunc
