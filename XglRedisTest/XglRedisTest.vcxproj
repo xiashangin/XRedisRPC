@@ -103,13 +103,16 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\log4cplus\include;C:\hiredis\src;C:\hiredis\deps;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\JsonCpp\include;C:\log4cplus\include;C:\hiredis\src;C:\hiredis\deps;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/D _CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>C:\JsonCpp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lib_json.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -152,6 +155,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="json\HealthDataBase.cpp" />
+    <ClCompile Include="json\ParseHealthData.cpp" />
     <ClCompile Include="RedisUtilsTest.h" />
     <ClCompile Include="XglCacheTest.cpp" />
   </ItemGroup>
@@ -165,6 +170,9 @@
     <ClInclude Include="CacheUtilsTest.h" />
     <ClInclude Include="ClientCacheUtils.h" />
     <ClInclude Include="ClientCacheUtilsTest.h" />
+    <ClInclude Include="json\healthData.h" />
+    <ClInclude Include="json\HealthDataBase.h" />
+    <ClInclude Include="json\ParseHealthData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

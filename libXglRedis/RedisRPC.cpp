@@ -59,6 +59,29 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	{
 		return bRlt;
 	}
+
+	//std::string getReqKeys = R_GET + std::string(" ") + m_strClientId + GLOBALREQS;
+	//redisReply *reply = (redisReply *)redisCommand(m_redisContext, getReqKeys.c_str());
+	//std::string reqKeys;
+	//if (reply && reply->type == REDIS_REPLY_STRING)
+	//{
+	//	reqKeys = reply->str;
+	//	_DEBUGLOG("heartbeat = " << reqKeys.c_str());
+	//	freeReplyObject(reply);
+	//}
+
+
+	//mapHBchnl::iterator it = m_mapHBChnl.begin();
+	//for (; it != m_mapHBChnl.end(); ++it)
+	//{
+	//	if (keyMatch(std::string(key), it->first))
+	//	{
+	//		bRlt = true;
+	//		_DEBUGLOG(key << "-->" << it->first.c_str());
+	//		break;
+	//	}
+	//}
+
 	std::string heartBeat = key + std::string(HEARTSLOT);			//心跳信令
 	std::string getHeartBeatCmd = R_GET + std::string(" ") + heartBeat;
 	redisReply *reply = (redisReply *)redisCommand(m_redisContext, getHeartBeatCmd.c_str());
@@ -69,6 +92,17 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 		//_DEBUGLOG("heartbeat = " << heartbeat.c_str() << ", now = " << time(NULL));
 		if (time(NULL) - atoi(heartbeat.c_str()) <= HEARTBEATTIMEOUT)
 			bRlt = true;
+	}
+	else if (!reply)
+	{
+		reply = (redisReply *)redisCommand(m_redisContext, getHeartBeatCmd.c_str());
+		if (reply && reply->type == REDIS_REPLY_STRING)
+		{
+			heartbeat = reply->str;
+			//_DEBUGLOG("heartbeat = " << heartbeat.c_str() << ", now = " << time(NULL));
+			if (time(NULL) - atoi(heartbeat.c_str()) <= HEARTBEATTIMEOUT)
+				bRlt = true;
+		}
 	}
 	else
 		_WARNLOG("获取心跳数据失败...");

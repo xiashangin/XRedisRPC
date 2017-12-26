@@ -52,7 +52,7 @@ extern "C"
 
 #define HEARTBEATTIMEOUT	10		//10s不更新heartbeat
 #define HEARTBEATINTERVAL	3
-#define GET_WAITTIMEOUT 10000
+#define GET_WAITTIMEOUT		10000
 
 #define REDIS_TIMEOUT			100		//业务模块处理超时
 #define REDIS_NOSERVICE			101		//无业务处理模块

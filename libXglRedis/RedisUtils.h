@@ -9,7 +9,6 @@ typedef std::function<void(const std::string & , const std::string & )> subsCall
 typedef std::function<void(const std::string & , const std::string &)> pullCallback;
 typedef std::function<void(const std::string & , const std::string &)> clientOpCallBack;
 
-
 typedef std::map<std::string, subsCallback> mapSubsCB;		//subkey-->subfunc
 typedef std::map<std::string, pullCallback> mapPullCB;		//pullkey-->subfunc
 typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
@@ -26,6 +25,11 @@ public:
 	isSubs说明：默认false
 		false：不使用redis的键空间通知功能，即subs、pull、subsClientGetOp等接口不起作用，只能进行redis基本操作
 		true：启用redis的键空间通知功能
+		两个问题无法保证：
+			1.  无法检测redis服务是否已经开启键空间通知功能
+			2.  无法保证订阅redis键空间命令成功执行（因为此方式使用的是异步接口，只能判断名称进入执行队列了）
+				即使此异步接口返回错误，无法将此错误返回给上层。但是程序仍然能正常运行，但是和订阅相关的功能全部无效。
+				目前采用重发机制缓解以上问题。
 	*/
 	bool connect(const std::string & strIp, int iPort, bool bNeedSubs = false);		//连接redis服务并订阅redis键空间通知
 	void disconnect();

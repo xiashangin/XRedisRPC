@@ -25,13 +25,22 @@
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
 #define	REDIS_KEY_NOT_EXIST		108		//get或pop的key不存在
 
+/************************************************************************/
+/*  订阅相关的回调函数：
+subs-->subsCallback
+pull-->pullCallback
+subsClientGetOp-->clientOpCallBack
+
+参数说明：
+strKey：订阅的键
+strValue：键对应的值
+*/
+/************************************************************************/
 typedef std::function<void(const std::string &, const std::string &)> subsCallback;
 typedef std::function<void(const std::string &, const std::string &)> pullCallback;
-typedef std::function<void(const std::string &, const std::string &)> clientOpCallBack;
 
 typedef std::map<std::string, subsCallback> mapSubsCB;		//subkey-->subfunc
 typedef std::map<std::string, pullCallback> mapPullCB;		//pullkey-->subfunc
-typedef std::map<std::string, clientOpCallBack> mapReqCB;	//getkey-->getfunc
 
 class CClientCacheUtils
 {

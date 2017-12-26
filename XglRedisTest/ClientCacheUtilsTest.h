@@ -230,6 +230,8 @@ void pull_test()
 
 
 
+
+
 void* multiThread(void *args)
 {
 	CClientCacheUtils *redis = (CClientCacheUtils *)args;

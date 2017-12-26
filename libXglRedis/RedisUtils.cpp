@@ -94,7 +94,22 @@ void* CRedis_Utils::thAsyncSubsAll(void *arg)
 	redisAsyncSetConnectCallback(self->m_pRedisAsyncContext, CRedis_Utils::connectCallback);
 	redisAsyncSetDisconnectCallback(self->m_pRedisAsyncContext, CRedis_Utils::disconnectCallback);
 	std::string cmd = std::string(R_PSUBS) + std::string(" ") + std::string(R_KEYSPACE) + std::string("*");
-	redisAsyncCommand(self->m_pRedisAsyncContext, subsAllCallback, self, cmd.c_str()/*"PSUBSCRIBE __keyspace@0__:*"*/);
+	//双重保障，如果第一次失败，进行第二次尝试。
+	int iRet = redisAsyncCommand(self->m_pRedisAsyncContext, subsAllCallback, self, cmd.c_str()/*"PSUBSCRIBE __keyspace@0__:*"*/);
+	if(iRet == REDIS_OK)
+		_DEBUGLOG("subscribe redis keyspace notification success!!! cmd = " << cmd.c_str());
+	else
+	{
+		_WARNLOG("subscribe redis keyspace notification failed!!! try again!!! cmd = " << cmd.c_str());
+		iRet = redisAsyncCommand(self->m_pRedisAsyncContext, subsAllCallback, self, cmd.c_str());
+		if (iRet == REDIS_OK)
+			_DEBUGLOG("subscribe redis keyspace notification success!!! cmd = " << cmd.c_str());
+		else
+		{
+			_ERRORLOG("subscribe redis keyspace notification failed!!!");
+			return nullptr;
+		}
+	}
 	//_DEBUGLOG("subscribe redis keyspace notification!!! cmd = " << cmd.c_str());
 
 #ifdef _WIN32
@@ -621,7 +636,7 @@ bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutRes
 	if (replyCheck(pRedisReply, strOutResult))
 		bRlt = true;
 	freeReplyObject(pRedisReply);
-	_DEBUGLOG("redis cmd = " << strInCmd.c_str() << ", rlt = " << bRlt);
+	//_DEBUGLOG("redis cmd = " << strInCmd.c_str() << ", rlt = " << bRlt);
 	return bRlt;
 }
 
