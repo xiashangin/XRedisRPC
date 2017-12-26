@@ -99,6 +99,11 @@ private:
 	//实现业务模块的数据隔离
 	std::string genNewKey(const std::string & lpStrOldKey);					//封装用户传入的key				
 	std::string getOldKey(const std::string & lpStrNewKey);					//获取客户的原始key
+	
+	std::map<std::string, int> getAllReqs(const std::string strReqList);
+	int syncReq(const std::string & strInKey, const std::string & strInReq, bool syncType, std::string & strOutResult);	//syncType:true-->加refCnt false-->减refCnt
+	int getRefCnt(const std::string & strInField, int & refCnt);
+	bool isReqExist(const std::string & strInKey, const std::string & strInReq, std::string & strOutResult);
 	bool sendCmd(const std::string & strInCmd, std::string & strOutResult);		//发送redis命令
 	bool replyCheck(redisReply *rRedisReply, std::string & strOutResult);		//解析redis应答消息
 

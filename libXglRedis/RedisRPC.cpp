@@ -60,27 +60,17 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 		return bRlt;
 	}
 
-	//std::string getReqKeys = R_GET + std::string(" ") + m_strClientId + GLOBALREQS;
-	//redisReply *reply = (redisReply *)redisCommand(m_redisContext, getReqKeys.c_str());
-	//std::string reqKeys;
-	//if (reply && reply->type == REDIS_REPLY_STRING)
-	//{
-	//	reqKeys = reply->str;
-	//	_DEBUGLOG("heartbeat = " << reqKeys.c_str());
-	//	freeReplyObject(reply);
-	//}
-
-
-	//mapHBchnl::iterator it = m_mapHBChnl.begin();
-	//for (; it != m_mapHBChnl.end(); ++it)
-	//{
-	//	if (keyMatch(std::string(key), it->first))
-	//	{
-	//		bRlt = true;
-	//		_DEBUGLOG(key << "-->" << it->first.c_str());
-	//		break;
-	//	}
-	//}
+	mapHBchnl::iterator it = m_mapHBChnl.begin();
+	for (; it != m_mapHBChnl.end(); ++it)
+	{
+		if (keyMatch(std::string(key), it->first))
+		{
+			bRlt = true;
+			//_DEBUGLOG(key << "-->" << it->first.c_str());
+			key = it->first.c_str();
+			break;
+		}
+	}
 
 	std::string heartBeat = key + std::string(HEARTSLOT);			//心跳信令
 	std::string getHeartBeatCmd = R_GET + std::string(" ") + heartBeat;
@@ -107,8 +97,11 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	else
 		_WARNLOG("获取心跳数据失败...");
 	freeReplyObject(reply);
-	redisFree(m_redisContext);
-	m_redisContext = nullptr;
+	if(m_redisContext)
+	{
+		redisFree(m_redisContext);
+		m_redisContext = nullptr;
+	}
 	return bRlt;
 }
 
@@ -148,7 +141,20 @@ int CRedisRPC::processKey(const char *key)
 	//远程调用处理key值
 	//将键值塞入对应的请求队列
 	//processKeyLock.lock();
-	std::string reqChnl = key + std::string(REQSLOT);
+
+	std::string strSubsKey;
+	mapReqchnl::iterator it = m_mapReqChnl.begin();
+	for (; it != m_mapReqChnl.end(); ++it)
+	{
+		if (keyMatch(std::string(key), it->first))
+		{
+			_DEBUGLOG(key << "-->" << it->first.c_str());
+			strSubsKey = it->first;
+			break;
+		}
+	}
+
+	std::string reqChnl = strSubsKey + std::string(REQSLOT);
 	std::string requestURL = reqChnl;// + m_strRequestID;
 									 //std::string pushCmd = std::string(R_PUSH) + std::string(" ") + requestURL + std::string(" ") + std::string(key);
 	std::string processURL = reqChnl + std::string(REQPROCESSING);
@@ -214,32 +220,53 @@ int CRedisRPC::processKey(const char *key)
 	return iRlt;
 }
 
+void CRedisRPC::syncReqChnl(const char *lpStrKey, const char *reqChlName, const char *heartBeatName)
+{
+	mapReqchnl::iterator it = m_mapHBChnl.find(std::string(lpStrKey));
+	if (it == m_mapHBChnl.end())
+	{
+		m_mapReqChnl.insert(std::pair<std::string, std::string>(std::string(lpStrKey), std::string(reqChlName)));
+		m_mapHBChnl.insert(std::pair<std::string, std::string>(std::string(lpStrKey), std::string(heartBeatName)));
+		_DEBUGLOG("同步业务处理模块已订阅的请求key成功... key = " << lpStrKey
+			<< "reqChnl = " << reqChlName
+			<< "hbChnl, = " << heartBeatName);
+	}
+	else
+		_DEBUGLOG("该键已经同步 key = " << lpStrKey);
+}
+
 void CRedisRPC::subsClientGetOp(const char *keys, const char *reqChlName,
 	const char *heartbeatChnName)
 {
-	//_DEBUGLOG("远程服务注册... keys = " << keys << ", reqChlName = " << reqChlName
-	//	<< ", heartbeatChnName = " << heartbeatChnName);
-	mapReqchnl::iterator it = m_mapHBChnl.find(std::string(keys));
-	if (it == m_mapHBChnl.end())
+	syncReqChnl(keys, reqChlName, heartbeatChnName);
+	if (m_mapHBChnl.size() == 1)	//启动设置心跳信令线程，m_mapReqChnl为空时线程停止
 	{
-
-		//		m_getKeys.insert(std::pair<std::string, getCallback>(std::string(keys), cb));
-		m_mapReqChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(reqChlName)));
-		m_mapHBChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(heartbeatChnName)));
-		_DEBUGLOG("远程服务注册成功 key = " << keys
-			<< "reqChnl = " << reqChlName
-			<< "hbChnl, = " << heartbeatChnName);
-		if (m_mapHBChnl.size() == 1)	//启动设置心跳信令线程，m_mapReqChnl为空时线程停止
-		{
-			_DEBUGLOG("启动心跳信令设置线程...");
-			//std::thread thHeartBeat(thSetHeartBeat, this);
-			//thHeartBeat.detach();
-			if (!thHeartBeat.joinable())
-				thHeartBeat = std::thread(thSetHeartBeat, this);
-		}
+		_DEBUGLOG("启动心跳信令设置线程...");
+		//std::thread thHeartBeat(thSetHeartBeat, this);
+		//thHeartBeat.detach();
+		if (!thHeartBeat.joinable())
+			thHeartBeat = std::thread(thSetHeartBeat, this);
 	}
-	else
-		_DEBUGLOG("该键已经订阅 key = " << keys);
+//	mapReqchnl::iterator it = m_mapHBChnl.find(std::string(keys));
+//	if (it == m_mapHBChnl.end())
+//	{
+//		//		m_getKeys.insert(std::pair<std::string, getCallback>(std::string(keys), cb));
+//		m_mapReqChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(reqChlName)));
+//		m_mapHBChnl.insert(std::pair<std::string, std::string>(std::string(keys), std::string(heartbeatChnName)));
+//		_DEBUGLOG("远程服务注册成功 key = " << keys
+//			<< "reqChnl = " << reqChlName
+//			<< "hbChnl, = " << heartbeatChnName);
+//		if (m_mapHBChnl.size() == 1)	//启动设置心跳信令线程，m_mapReqChnl为空时线程停止
+//		{
+//			_DEBUGLOG("启动心跳信令设置线程...");
+//			//std::thread thHeartBeat(thSetHeartBeat, this);
+//			//thHeartBeat.detach();
+//			if (!thHeartBeat.joinable())
+//				thHeartBeat = std::thread(thSetHeartBeat, this);
+//		}
+//	}
+//	else
+//		_DEBUGLOG("该键已经订阅 key = " << keys);
 }
 
 std::string CRedisRPC::unsubClientGetOp(const char *keys)
@@ -383,16 +410,22 @@ void* CRedisRPC::thSetHeartBeat(void *arg)
 				redisCommand(self->m_redisContext, setHbCmd.c_str());
 		}
 		self->hbLock.unlock();
-		std::this_thread::sleep_for(std::chrono::milliseconds(GET_WAITTIMEOUT / 2));
+		std::this_thread::sleep_for(std::chrono::milliseconds(GET_WAITTIMEOUT / 4));
 	}
 
 	return nullptr;
 }
 
-void CRedisRPC::clearChnl()
+std::vector<std::string> CRedisRPC::clearChnl()
 {
+	std::vector<std::string> vecReqKeys;
 	if (m_mapReqChnl.size() > 0)
+	{
+		mapReqchnl::iterator it = m_mapReqChnl.begin();
+		for (; it != m_mapReqChnl.end(); ++it)
+			vecReqKeys.push_back(it->first);
 		m_mapReqChnl.clear();
+	}
 	hbLock.lock();
 	bool needWait = false;
 	if (m_mapHBChnl.size() > 0)
@@ -407,6 +440,7 @@ void CRedisRPC::clearChnl()
 		thHeartBeat.join();
 		_DEBUGLOG("thHeartBeat quit... ");
 	}
+	return vecReqKeys;
 }
 
 void CRedisRPC::setClientId(const std::string & strClientId)

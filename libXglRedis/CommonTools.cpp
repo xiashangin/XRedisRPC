@@ -63,7 +63,8 @@ std::vector<std::string> split(std::string str, std::string pattern)
 		if (pos < size)
 		{
 			std::string s = str.substr(i, pos - i);
-			result.push_back(s);
+			if(s.length() > 0)
+				result.push_back(s);
 			i = pos + pattern.size() - 1;
 		}
 	}

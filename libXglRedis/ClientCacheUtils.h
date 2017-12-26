@@ -23,7 +23,8 @@
 #define REDIS_VALUE_NULL		105		//输入的value值为空
 #define REDIS_KEY_EXISTED		106		//key已被订阅
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
-#define	REDIS_KEY_NOT_EXIST		108		//get或pop的key不存在
+#define REDIS_REQ_SYNC_FAIL		108		//请求同步失败
+#define	REDIS_KEY_NOT_EXIST		109		//get或pop的key不存在
 
 /************************************************************************/
 /*  订阅相关的回调函数：

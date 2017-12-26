@@ -139,6 +139,30 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 	std::string new_key = genNewKey(strInKey.c_str());
 	std::string cmd = std::string(R_GET) + std::string(" ") + std::string(new_key);
 	//_DEBUGLOG("get cmd = " << cmd.c_str());
+	
+	//同步所有业务处理模块已订阅的请求key
+	std::map<std::string, int> allReq = getAllReqs(GLOBALREQKEYS);
+	if (allReq.size() > 0)
+	{
+		std::map<std::string, int>::iterator map_iter = allReq.begin();
+		for (; map_iter != allReq.end(); ++map_iter)
+		{
+			if (map_iter->second > 0)
+			{
+				std::string strKey = map_iter->first;
+				std::string new_key = genNewKey(strKey);				//键
+				std::string heartBeat = new_key + HEARTSLOT;			//心跳信令
+				std::string reqChnl = new_key + REQSLOT;				//请求队列
+
+				m_redisRPC.syncReqChnl(new_key.c_str(), reqChnl.c_str(), heartBeat.c_str());
+			}
+			else
+			{
+
+			}
+		}
+	}
+
 	if(!m_redisRPC.isServiceModelAvailable(new_key.c_str()) /*|| !m_redisRPC.isKeySubs(new_key.c_str())*/)
 	{
 		//get失败(nil也表示失败) 该key值不需要处理或者没有可用服务
@@ -152,6 +176,8 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 			return REDIS_KEY_NOT_EXIST;
 		return REDIS_NOSERVICE;
 	} 
+
+
 
 	//远程调用处理数据
 	int iRlt = m_redisRPC.processKey(new_key.c_str());
@@ -433,10 +459,19 @@ int CRedis_Utils::subsClientGetOp(const std::string & strInKey, clientOpCallBack
 		m_reqLock.lock();
 		if (it == m_mapReqChnl.end())
 		{
-			m_mapReqChnl.insert(std::pair<std::string, pullCallback>(subsReqChnl, cb));
-			_DEBUGLOG("subsClientGetOp 订阅成功 key = " << subsReqChnl.c_str()
-				<< ", size = " << m_mapReqChnl.size());
-			m_redisRPC.subsClientGetOp(new_key.c_str(), reqChnl.c_str(), heartBeat.c_str());
+			std::string strRlt;
+			if(syncReq(GLOBALREQKEYS, strInKey, true, strRlt) == 0)
+			{
+				m_mapReqChnl.insert(std::pair<std::string, pullCallback>(subsReqChnl, cb));
+				_DEBUGLOG("subsClientGetOp 订阅成功 key = " << subsReqChnl.c_str()
+					<< ", size = " << m_mapReqChnl.size());
+				m_redisRPC.subsClientGetOp(new_key.c_str(), reqChnl.c_str(), heartBeat.c_str());
+			}
+			else
+			{
+				_WARNLOG("subsClientGetOp 订阅失败 rlt = " << iRlt << "-->" << strRlt.c_str());
+				iRlt = REDIS_REQ_SYNC_FAIL;
+			}
 		}
 		else
 		{
@@ -468,11 +503,12 @@ bool CRedis_Utils::unsubClientGetOp(const std::string & strInKey)
 		}
 	}
 	bool bRlt = false;
-	if (m_mapReqChnl.size() > 0)
+	std::string strRlt;
+	if ((syncReq(GLOBALREQKEYS, strInKey, false, strRlt) == 0) && m_mapReqChnl.size() > 0)
 	{
 		std::string new_key = genNewKey(strInKey);
 		m_reqLock.lock();
-		std::string reqChnl = m_redisRPC.unsubClientGetOp(new_key.c_str()) + "*";
+		std::string reqChnl = m_redisRPC.unsubClientGetOp(new_key.c_str());// +"*";
 		if (((reqChnl.length() - 1) > 0) && (m_mapReqChnl.find(reqChnl) != m_mapReqChnl.end()))
 		{
 			//DEBUGLOG << "before unsubGetOp chnlName = " << reqChnl << ", size = " << m_reqChnl.size();
@@ -488,7 +524,13 @@ bool CRedis_Utils::unsubClientGetOp(const std::string & strInKey)
 void CRedis_Utils::stopSubClientGetOp() 
 {
 	m_reqLock.lock();
-	m_redisRPC.clearChnl();
+	std::vector<std::string> vecReqKeys = m_redisRPC.clearChnl();
+	std::vector<std::string>::iterator vec_iter = vecReqKeys.begin();
+	for (; vec_iter != vecReqKeys.end(); ++vec_iter)
+	{
+		std::string strRlt;
+		syncReq(GLOBALREQKEYS, getOldKey(*vec_iter), false, strRlt);
+	}
 	if (m_mapReqChnl.size() > 0)
 		m_mapReqChnl.clear();
 	m_reqLock.unlock();
@@ -532,7 +574,7 @@ void CRedis_Utils::close()
 #ifdef _WIN32
 		
 		aeStop(m_loop);
-		m_loop = nullptr;
+		//m_loop = nullptr;
 		//_DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());
 		_DEBUGLOG("wait for asyncThread quit... id --> " << m_strClientId.c_str());
 		if (thAsyncKeyNotify.joinable())
@@ -585,6 +627,127 @@ std::string CRedis_Utils::getOldKey(const std::string & new_key)
 		return new_key.substr(m_strClientId.length());
 	else
 		return new_key;
+}
+
+std::map<std::string, int> CRedis_Utils::getAllReqs(const std::string strReqList)
+{
+	std::map<std::string, int> mapReqs;
+	std::vector<std::string> vecReqs;
+	std::vector<std::string>::iterator vecIter;
+	_DEBUGLOG("获取所有已订阅的请求...");
+	if (!m_bIsConnected)
+	{
+		_DEBUGLOG("redis 服务尚未连接...尝试重新连接... ip = " << m_strIp.c_str()
+			<< ", port = " << m_iPort);
+		if (!_connect(m_strIp.c_str(), m_iPort))
+		{
+			_WARNLOG("redis服务重新连接失败... ");
+			return mapReqs;
+		}
+	}
+	std::string new_key = genNewKey(strReqList);
+	std::string cmd = std::string(R_HGETALL ) + std::string(" ") + new_key;
+	
+	std::string strOutResult;
+	sendCmd(cmd, strOutResult);
+	vecReqs = split(strOutResult, COMMAND_SPLIT);
+	if(vecReqs.size() > 0)
+	{
+		vecIter = vecReqs.begin();
+		for (; vecIter != vecReqs.end(); ++vecIter)
+		{
+			std::string strKey = *vecIter;
+			vecIter++;
+			int refCnt = atoi(vecIter->c_str());
+			mapReqs.insert(std::pair<std::string, int>(strKey, refCnt));
+		}
+	}
+	return mapReqs;
+}
+
+int CRedis_Utils::syncReq(const std::string & strInKey, const std::string & strInReq, bool syncType, std::string & strOutResult)
+{
+	if (!m_bIsConnected)
+	{
+		_DEBUGLOG("redis 服务尚未连接...尝试重新连接... ip = " << m_strIp.c_str()
+			<< ", port = " << m_iPort);
+		if (!_connect(m_strIp.c_str(), m_iPort))
+		{
+			_WARNLOG("redis服务重新连接失败... ");
+			strOutResult = "redis is not connected...";
+			return REDIS_CONNFAIL;
+		}
+	}
+	int refCnt = 0;
+	getRefCnt(strInReq, refCnt);
+	std::string new_key = genNewKey(strInKey);
+	if (syncType)
+		refCnt++;
+	else
+		refCnt--;
+	std::string cmd;
+	if(refCnt > 0)
+		cmd = std::string(R_HSET) + std::string(" ")
+			+ new_key + std::string(" ") + strInReq + std::string(" ") + int2str(refCnt);
+	else
+		cmd = std::string(R_HDEL) + std::string(" ")
+			+ new_key + std::string(" ") + strInReq;
+	bool bRlt = sendCmd(cmd, strOutResult);
+	if (bRlt)
+		return 0;
+	else
+		return REDIS_CMD_ERR;
+}
+
+int CRedis_Utils::getRefCnt(const std::string & strInField, int & refCnt)
+{
+	refCnt = 0;
+	if (!m_bIsConnected)
+	{
+		_DEBUGLOG("redis 服务尚未连接...尝试重新连接... ip = " << m_strIp.c_str()
+			<< ", port = " << m_iPort);
+		if (!_connect(m_strIp.c_str(), m_iPort))
+		{
+			_WARNLOG("redis服务重新连接失败... ");
+			return REDIS_CONNFAIL;
+		}
+	}
+	std::string cmd = std::string(R_HGET) + std::string(COMMAND_SPLIT)
+		+ genNewKey(GLOBALREQKEYS) + std::string(COMMAND_SPLIT) + strInField;
+	std::string strOutResult;
+	bool bRlt = sendCmd(cmd, strOutResult);
+	if (bRlt)
+	{
+		refCnt = atoi(strOutResult.c_str());
+		return 0;
+	}
+	else
+		return REDIS_CMD_ERR;
+}
+
+bool CRedis_Utils::isReqExist(const std::string & strInKey, const std::string & strInReq, std::string & strOutResult)
+{
+	if (!m_bIsConnected)
+	{
+		_DEBUGLOG("redis 服务尚未连接...尝试重新连接... ip = " << m_strIp.c_str()
+			<< ", port = " << m_iPort);
+		if (!_connect(m_strIp.c_str(), m_iPort))
+		{
+			_WARNLOG("redis服务重新连接失败... ");
+			strOutResult = "redis is not connected...";
+			return REDIS_CONNFAIL;
+		}
+	}
+
+	std::string new_key = genNewKey(strInKey);
+	std::string cmd = std::string(R_SISMEMBER) + COMMAND_SPLIT
+		+ new_key + COMMAND_SPLIT + strInReq;
+
+	bool bRlt = sendCmd(cmd, strOutResult);
+	if (bRlt)
+		return 0;
+	else
+		return REDIS_CMD_ERR;
 }
 
 bool CRedis_Utils::sendCmd(const std::string & strInCmd, std::string & strOutResult)
@@ -677,6 +840,7 @@ bool CRedis_Utils::replyCheck(redisReply *pRedisReply, std::string & strOutResul
 			std::string strRlt;
 			replyCheck(pRedisReply->element[i], strRlt);
 			strOutResult.append(strRlt);
+			strOutResult.append(COMMAND_SPLIT);
 		}
 		//_DEBUGLOG("------------------------------------------------------------");
 		break;

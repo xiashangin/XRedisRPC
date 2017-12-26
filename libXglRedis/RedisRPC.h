@@ -33,22 +33,29 @@ extern "C"
 #define REDIS_BUF_SIZE 1024 * 2
 
 //redis命令
-#define R_GET		"GET"
-#define R_SET		"SET"
-#define R_PUSH		"LPUSH"
-#define R_POP		"RPOP"
-#define R_UNSUBS	"UNSUBSCRIBE"
-#define R_SUBS		"SUBSCRIBE"
-#define R_PSUBS		"PSUBSCRIBE"
-#define R_RENAME	"RENAME"
-#define R_EXISTS	"EXISTS"
-#define R_DEL		"DEL"
+#define R_GET		"GET"				//GET key
+#define R_SET		"SET"				//SET key value
+#define R_PUSH		"LPUSH"				//SET key value
+#define R_POP		"RPOP"				//RPOP key
+#define R_UNSUBS	"UNSUBSCRIBE"		//UNSUBSCRIBE channel
+#define R_SUBS		"SUBSCRIBE"			//SUBSCRIBE channel
+#define R_PSUBS		"PSUBSCRIBE"		//PSUBSCRIBE pattern
+#define R_RENAME	"RENAME"			//RENAME key newkey
+#define R_EXISTS	"EXISTS"			//EXISTS key
+#define R_DEL		"DEL"				//DEL key
+#define R_HSET		"HSET"				//HSET key field value
+#define R_HGET		"HGET"				//HGET key field
+#define R_HGETALL 	"HGETALL"			//HGETALL key
+#define R_HDEL		"HDEL"				//HDEL key field
+#define R_SISMEMBER	"SISMEMBER"			//SISMEMBER key member
 #define R_KEYSPACE	"__keyspace@0__:"
 
 //RPC list
-#define HEARTSLOT		"_heart_beart_slot"
-#define REQPROCESSING	"_processing?"
-#define REQSLOT			"_request_slot"
+#define HEARTSLOT			"_heart_beart_slot"			//心跳信令
+#define REQPROCESSING		"_processing?"				//哨兵
+#define REQSLOT				"_request_slot"				//请求槽
+#define GLOBALREQKEYS		"__GLOBALREQKEYS__"			//请求队列
+#define GLOBALREQKEYSREF	"__GLOBALREQKEYSREF__"		//引用计数
 
 #define HEARTBEATTIMEOUT	10		//10s不更新heartbeat
 #define HEARTBEATINTERVAL	3
@@ -63,7 +70,8 @@ extern "C"
 #define REDIS_VALUE_NULL		105		//输入的value值为空
 #define REDIS_KEY_EXISTED		106		//key已被订阅
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
-#define	REDIS_KEY_NOT_EXIST		108		//get或pop的key不存在
+#define REDIS_REQ_SYNC_FAIL		108		//请求同步失败
+#define	REDIS_KEY_NOT_EXIST		109		//get或pop的key不存在
 
 typedef std::map<std::string, std::string>		mapReqchnl;	//getkey-->requestChnl
 typedef std::map<std::string, std::string>		mapHBchnl;	//getkey-->HeartBeatChnl
@@ -80,11 +88,14 @@ public:
 	bool isKeySubs(const char *lpStrKey);			//检查key是否需要处理
 
 	int processKey(const char *lpStrKey);			//处理key, timeout--ms
+	void syncReqChnl(const char *lpStrKey, const char *reqChlName, const char *heartBeatName);
+	
 	//业务处理模块
 	void subsClientGetOp(const char *lpStrKey, const char *reqChlName,
 		const char *heartbeatChnName);		//注册key以及回调函数
 	std::string unsubClientGetOp(const char *keys);
-	void clearChnl();
+	
+	std::vector<std::string> clearChnl();
 	void setClientId(const std::string & strClientId);
 	void setRedisAddr(const std::string & strIp, const int iPort);
 private:

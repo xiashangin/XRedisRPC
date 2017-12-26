@@ -35,35 +35,55 @@ int main(int argc, char const *argv[])
 
 
 	//get test
-	std::shared_ptr<CCacheUtils> redis2 = CCacheUtils::createInstance("1");
-	bRlt = redis2->connect(REDISIP, REDISPORT, true);
+	std::shared_ptr<CCacheUtils> redis1 = CCacheUtils::createInstance("1");
+	bRlt = redis1->connect(REDISIP, REDISPORT, true);
 	if (!bRlt)
 	{
 		logInfo << "connect failed... ip = " << REDISIP << ", port = " << REDISPORT;
 		setLog(LOG_DEBUG, logInfo);
 	}
 
-	redis2->subsClientGetOp("hello", [&redis2](const std::string & strKey, const std::string & strValue) {
+	redis1->subsClientGetOp("hello*", [&redis1](const std::string & strKey, const std::string & strValue) {
 		if (strValue.length() > 0)
 		{
 			logInfo << "get op callback... key = " << strKey.c_str() <<
 				", value = " << strValue;
 			setLog(LOG_DEBUG, logInfo);
-			std::string value_ = strValue + std::string("getCBA");
+			std::string value_ = strValue + std::string("1");
+			redis1->notifyRlt(strKey, value_);
+		}
+		else
+		{
+			logInfo << "get op callback... key was empty key = " << strKey.c_str();
+			setLog(LOG_DEBUG, logInfo);
+			redis1->notifyRlt(strKey, "123456");
+		}
+		
+	});
+	
+	std::shared_ptr<CCacheUtils> redis2 = CCacheUtils::createInstance("1");
+	bRlt = redis2->connect(REDISIP, REDISPORT, true);
+	redis2->subsClientGetOp("hello*", [&redis2](const std::string & strKey, const std::string & strValue) {
+		if (strValue.length() > 0)
+		{
+			logInfo << "get op callback... key = " << strKey.c_str() <<
+				", value = " << strValue;
+			setLog(LOG_DEBUG, logInfo);
+			std::string value_ = strValue + std::string("2");
 			redis2->notifyRlt(strKey, value_);
 		}
 		else
 		{
 			logInfo << "get op callback... key was empty key = " << strKey.c_str();
 			setLog(LOG_DEBUG, logInfo);
-			redis2->notifyRlt(strKey, "123456");
+			redis2->notifyRlt(strKey, "1234567");
 		}
-		
 	});
-	
+	redis1->unsubClientGetOp("hello*");
+
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	std::string strRlt;
-	int iRlt = redis->get("hello", strRlt);
+	int iRlt = redis->get("hello12", strRlt);
 	if (iRlt == 0)
 	{
 		logInfo << "get success!!! hello --> " << strRlt;
@@ -71,7 +91,7 @@ int main(int argc, char const *argv[])
 	}
 	else
 	{
-		logInfo << "get failed!!! iRlt = " << iRlt;
+		logInfo << "get failed!!! iRlt = " << iRlt << "-->" << strRlt;
 		setLog(LOG_DEBUG, logInfo);
 	}
 
