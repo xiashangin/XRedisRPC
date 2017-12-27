@@ -580,11 +580,10 @@ void CRedis_Utils::close()
 		if (m_pRedisAsyncContext) { 
 			//m_aeStopLock.lock(); 
 			redisAsyncDisconnect(m_pRedisAsyncContext);
-			//redisAsyncFree(m_pRedisAsyncContext);
-			//m_pRedisAsyncContext = nullptr;
+			redisAsyncFree(m_pRedisAsyncContext);
+			m_pRedisAsyncContext = nullptr;
 
 #ifdef _WIN32
-		
 		aeStop(m_loop);
 		//m_loop = nullptr;
 		//_DEBUGLOG("stop event dispatch --> " << m_strClientId.c_str());

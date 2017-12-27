@@ -43,7 +43,7 @@ int main(int argc, char const *argv[])
 		setLog(LOG_DEBUG, logInfo);
 	}
 
-	redis1->subsClientGetOp("hello*", [&redis1](const std::string & strKey, const std::string & strValue) {
+	redis1->subsClientGetOp("hello", [&redis1](const std::string & strKey, const std::string & strValue) {
 		if (strValue.length() > 0)
 		{
 			logInfo << "get op callback... key = " << strKey.c_str() <<
@@ -60,10 +60,12 @@ int main(int argc, char const *argv[])
 		}
 		
 	});
-	
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::string strRlt;
+	int iRlt = redis->get("hello", strRlt);
 	std::shared_ptr<CCacheUtils> redis2 = CCacheUtils::createInstance("1");
 	bRlt = redis2->connect(REDISIP, REDISPORT, true);
-	redis2->subsClientGetOp("hello*", [&redis2](const std::string & strKey, const std::string & strValue) {
+	redis2->subsClientGetOp("hello", [&redis2](const std::string & strKey, const std::string & strValue) {
 		if (strValue.length() > 0)
 		{
 			logInfo << "get op callback... key = " << strKey.c_str() <<
@@ -79,11 +81,11 @@ int main(int argc, char const *argv[])
 			redis2->notifyRlt(strKey, "1234567");
 		}
 	});
-	//redis1->unsubClientGetOp("hello*");
+	redis1->unsubClientGetOp("hello");
+	redis2->unsubClientGetOp("hello");
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	std::string strRlt;
-	int iRlt = redis->get("hello12", strRlt);
+	iRlt = redis->get("hello", strRlt);
 	if (iRlt == 0)
 	{
 		logInfo << "get success!!! hello --> " << strRlt;

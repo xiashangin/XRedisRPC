@@ -96,7 +96,11 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	}
 	else
 		_WARNLOG("获取心跳数据失败...");
-	freeReplyObject(reply);
+	if (reply)
+	{
+		freeReplyObject(reply);
+		reply = nullptr;
+	}
 	if(m_redisContext)
 	{
 		redisFree(m_redisContext);
@@ -436,8 +440,11 @@ std::vector<std::string> CRedisRPC::clearChnl()
 	hbLock.unlock();
 	if (needWait)
 	{
-		_DEBUGLOG("wait for thHeartBeat quit... size = " << m_mapHBChnl.size());
-		thHeartBeat.join();
+		if(thHeartBeat.joinable())
+		{
+			_DEBUGLOG("wait for thHeartBeat quit... size = " << m_mapHBChnl.size());
+			thHeartBeat.join();
+		}
 		_DEBUGLOG("thHeartBeat quit... ");
 	}
 	return vecReqKeys;
