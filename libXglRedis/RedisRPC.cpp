@@ -65,8 +65,6 @@ bool CRedisRPC::isServiceModelAvailable(const char *key)
 	{
 		if (keyMatch(std::string(key), it->first))
 		{
-			bRlt = true;
-			//_DEBUGLOG(key << "-->" << it->first.c_str());
 			key = it->first.c_str();
 			break;
 		}
