@@ -158,7 +158,7 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 			}
 			else
 			{
-
+				//不需要处理，引用计数为0key的已经被删除了
 			}
 		}
 	}
@@ -539,10 +539,22 @@ void CRedis_Utils::stopSubClientGetOp()
 int CRedis_Utils::notifyRlt(const std::string & strInKey, const std::string & strInValue)
 {
 	std::string strRlt;
-	std::string processURL = strInKey + std::string(REQSLOT) + std::string(REQPROCESSING);
+	
+	std::string strNewKey = genNewKey(strInKey);
+	std::string strReqSlot;
+	mapReqCB::iterator iter = m_mapReqChnl.begin();
+	for (; iter != m_mapReqChnl.end(); ++iter)
+	{
+		std::string strSubsKey = iter->first.substr(0, iter->first.length() - strlen(REQSLOT));
+		if (keyMatch(strNewKey, strSubsKey))
+			strReqSlot = iter->first;
+	}
+
+
+	std::string processURL = strReqSlot + std::string(REQPROCESSING);
 	//std::string setProcessCMd = std::string(R_SET) + std::string(" ") + processURL + std::string(" ") + std::string("0");
 	strRlt.clear();
-	set(processURL, "0", strRlt);	
+	set(getOldKey(processURL), "0", strRlt);	
 	strRlt.clear();
 	return set(strInKey, strInValue, strRlt);
 }
@@ -685,14 +697,29 @@ int CRedis_Utils::syncReq(const std::string & strInKey, const std::string & strI
 		refCnt++;
 	else
 		refCnt--;
-	std::string cmd;
+	std::string strRefCntUpdateCmd;
+	std::string strHBDelCmd;
+	std::string strReqDelCmd;
+	std::string strReqDefDelCmd;
 	if(refCnt > 0)
-		cmd = std::string(R_HSET) + std::string(" ")
+		strRefCntUpdateCmd = std::string(R_HSET) + std::string(" ")
 			+ new_key + std::string(" ") + strInReq + std::string(" ") + int2str(refCnt);
 	else
-		cmd = std::string(R_HDEL) + std::string(" ")
+	{
+		strRefCntUpdateCmd = std::string(R_HDEL) + std::string(" ")
 			+ new_key + std::string(" ") + strInReq;
-	bool bRlt = sendCmd(cmd, strOutResult);
+		strHBDelCmd = std::string(R_DEL) + std::string(" ")
+			+ genNewKey(strInReq) + HEARTSLOT;
+		strReqDelCmd = std::string(R_DEL) + std::string(" ")
+			+ genNewKey(strInReq) + REQSLOT;
+		strReqDefDelCmd = std::string(R_DEL) + std::string(" ")
+			+ genNewKey(strInReq) + REQSLOT + REQPROCESSING;
+		sendCmd(strHBDelCmd, strOutResult);
+		sendCmd(strReqDelCmd, strOutResult);
+		sendCmd(strReqDefDelCmd, strOutResult);
+	}
+	strOutResult.clear();
+	bool bRlt = sendCmd(strRefCntUpdateCmd, strOutResult);
 	if (bRlt)
 		return 0;
 	else
@@ -900,11 +927,13 @@ bool CRedis_Utils::getReq(std::string strInKey)
 	redisCommand(m_pRedisContext, "MULTI");
 	sendCmd(getProcessCmd, getRlt);
 	sendCmd(setProcessingCmd, setRlt);
+	//redisCommand(m_pRedisContext, getProcessCmd.c_str());
+	//redisCommand(m_pRedisContext, setProcessingCmd.c_str());
 	redisReply *reply = (redisReply *)redisCommand(m_pRedisContext, "EXEC");
 
 	std::string strRlt;
 	replyCheck(reply, strRlt);
-	if (strRlt.length() == 3 && strRlt.find("0") == std::string::npos)
+	if (strRlt.length() == (3 + strlen(COMMAND_SPLIT) * 2) && strRlt.find("0") == std::string::npos)
 		return false;
 	else
 		return true;

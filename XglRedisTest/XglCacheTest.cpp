@@ -79,7 +79,7 @@ int main(int argc, char const *argv[])
 			redis2->notifyRlt(strKey, "1234567");
 		}
 	});
-	redis1->unsubClientGetOp("hello*");
+	//redis1->unsubClientGetOp("hello*");
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	std::string strRlt;
