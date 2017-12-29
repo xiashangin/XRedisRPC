@@ -4,9 +4,10 @@
 //#include "ClientCacheUtilsTest.h"
 #pragma comment(lib, "libXglRedis.lib")
 
+#include "json/ParseHealthData.h"
 int main(int argc, char const *argv[])
 {
-	std::shared_ptr<CCacheUtils> redis = CCacheUtils::createInstance("1");
+	std::shared_ptr<CCacheUtils> redis = CCacheUtils::createInstance("M");
 	//CClientCacheUtils redis;
 	bool bRlt = redis->connect(REDISIP, REDISPORT);
 	if (!bRlt)
@@ -33,36 +34,69 @@ int main(int argc, char const *argv[])
 	//subs_test();
 	//pull_test();
 
+	//CParseHealthData parseUtils;
+	//std::string str = parseUtils.readFileIntoString("registerjs_1.json");
+	//std::cout << str << std::endl;
+	////parseUtils.parseFromFile("registerjs_1.json");
+	//parseUtils.parseFromString(str);
+	//int iDataType = parseUtils.getDataType();
+
+	//std::string name;
+
+	//if (iDataType == TYPE_PERSONINFO)
+	//{
+	//	pdPersonInfo personInfo = *(pdPersonInfo *)parseUtils.getHealthData();
+	//	name = *personInfo.m_gender;
+	//	std::cout << "id-->" << *personInfo.m_id << std::endl;
+	//	std::cout << "name-->" << *personInfo.m_name << std::endl;
+	//	std::cout << "sex-->" << *personInfo.m_gender << std::endl;
+	//	std::cout << "birth-->" << *personInfo.m_birth << std::endl;
+	//	std::cout << "phone-->" << *personInfo.m_phone << std::endl;
+	//}
+	//std::string sdia;
+	//redis->set("test", name, sdia);
+	//sdia.clear();
+	//redis->get("test", sdia);
 
 	//get test
-	std::shared_ptr<CCacheUtils> redis1 = CCacheUtils::createInstance("1");
-	bRlt = redis1->connect(REDISIP, REDISPORT, true);
-	if (!bRlt)
-	{
-		logInfo << "connect failed... ip = " << REDISIP << ", port = " << REDISPORT;
+	//std::shared_ptr<CCacheUtils> redis1 = CCacheUtils::createInstance("M");
+	//bRlt = redis1->connect(REDISIP, REDISPORT, true);
+	//if (!bRlt)
+	//{
+	//	logInfo << "connect failed... ip = " << REDISIP << ", port = " << REDISPORT;
+	//	setLog(LOG_DEBUG, logInfo);
+	//}
+
+	//int callBackCnt = 0;
+	//redis1->subsClientGetOp("SGETID_*", [&redis1, &callBackCnt](const std::string & strKey, const std::string & strValue) {
+	//	callBackCnt++;
+	//	if (strValue.length() > 0)
+	//	{
+	//		logInfo << "get op callback... key = " << strKey.c_str() <<
+	//			", value = " << strValue;
+	//		setLog(LOG_DEBUG, logInfo);
+	//		std::string value_ = strValue + std::string("1");
+	//		redis1->notifyRlt(strKey, int2str(callBackCnt));
+	//	}
+	//	else
+	//	{
+	//		logInfo << "get op callback... key was empty key = " << strKey.c_str();
+	//		setLog(LOG_DEBUG, logInfo);
+	//		redis1->notifyRlt(strKey, int2str(callBackCnt));
+	//	}
+	//});
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::string strRlt;
+	int iRlt;
+	int getOpCnt = 0;
+	while (getOpCnt < 10) {
+		getOpCnt++;
+		iRlt = redis->get("SGETID_123", strRlt);
+		logInfo << "strRlt = " << strRlt.c_str() << "-->" << getOpCnt;
 		setLog(LOG_DEBUG, logInfo);
 	}
 
-	redis1->subsClientGetOp("hello", [&redis1](const std::string & strKey, const std::string & strValue) {
-		if (strValue.length() > 0)
-		{
-			logInfo << "get op callback... key = " << strKey.c_str() <<
-				", value = " << strValue;
-			setLog(LOG_DEBUG, logInfo);
-			std::string value_ = strValue + std::string("1");
-			redis1->notifyRlt(strKey, value_);
-		}
-		else
-		{
-			logInfo << "get op callback... key was empty key = " << strKey.c_str();
-			setLog(LOG_DEBUG, logInfo);
-			redis1->notifyRlt(strKey, "123456");
-		}
-		
-	});
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	std::string strRlt;
-	int iRlt = redis->get("hello", strRlt);
+	//setLog(LOG_DEBUG, logInfo);
 	//std::shared_ptr<CCacheUtils> redis2 = CCacheUtils::createInstance("1");
 	//bRlt = redis2->connect(REDISIP, REDISPORT, true);
 	//redis2->subsClientGetOp("hello", [&redis2](const std::string & strKey, const std::string & strValue) {
@@ -81,21 +115,21 @@ int main(int argc, char const *argv[])
 	//		redis2->notifyRlt(strKey, "1234567");
 	//	}
 	//});
-	redis1->unsubClientGetOp("hello");
+	//redis1->unsubClientGetOp("hello");
 	//redis2->unsubClientGetOp("hello");
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	iRlt = redis->get("hello", strRlt);
-	if (iRlt == 0)
-	{
-		logInfo << "get success!!! hello --> " << strRlt;
-		setLog(LOG_DEBUG, logInfo);
-	}
-	else
-	{
-		logInfo << "get failed!!! iRlt = " << iRlt << "-->" << strRlt;
-		setLog(LOG_DEBUG, logInfo);
-	}
+	//std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//iRlt = redis->get("hello", strRlt);
+	//if (iRlt == 0)
+	//{
+	//	logInfo << "get success!!! hello --> " << strRlt;
+	//	setLog(LOG_DEBUG, logInfo);
+	//}
+	//else
+	//{
+	//	logInfo << "get failed!!! iRlt = " << iRlt << "-->" << strRlt;
+	//	setLog(LOG_DEBUG, logInfo);
+	//}
 
 	//subs test
 	//int getCnt = 0;

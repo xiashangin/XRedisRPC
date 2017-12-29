@@ -141,6 +141,7 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 	//_DEBUGLOG("get cmd = " << cmd.c_str());
 	
 	//同步所有业务处理模块已订阅的请求key
+	std::string subsKey;
 	std::map<std::string, int> allReq = getAllReqs(GLOBALREQKEYS);
 	if (allReq.size() > 0)
 	{
@@ -153,7 +154,7 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 				std::string new_key = genNewKey(strKey);				//键
 				std::string heartBeat = new_key + HEARTSLOT;			//心跳信令
 				std::string reqChnl = new_key + REQSLOT;				//请求队列
-
+				subsKey = strKey;
 				m_redisRPC.syncReqChnl(new_key.c_str(), reqChnl.c_str(), heartBeat.c_str());
 			}
 			else
@@ -167,6 +168,11 @@ int CRedis_Utils::get(const std::string & strInKey, std::string & strOutResult)
 	{
 		//get失败(nil也表示失败) 该key值不需要处理或者没有可用服务
 		//直接返回数据
+		if(subsKey.length() > 0)
+		{
+			std::string strRlt;
+			syncReq(GLOBALREQKEYS, subsKey, false, strRlt);
+		}
 		_DEBUGLOG("no available service-->" << new_key.c_str());
 		bRlt = sendCmd(cmd, strOutResult);
 		m_getLock.unlock();

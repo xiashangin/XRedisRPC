@@ -257,32 +257,32 @@ int failCnt = 0;
 int insertCnt = 0;
 void parseTest(std::string strFileName, std::string strKey, CCacheUtils & redis)
 {
-	CParseHealthData parseUtil;
-	std::stringstream ss;
-	std::string strPid;
-	ss << std::this_thread::get_id();
-	ss >> strPid;
+	//CParseHealthData parseUtil;
+	//std::stringstream ss;
+	//std::string strPid;
+	//ss << std::this_thread::get_id();
+	//ss >> strPid;
 
-	testLock.lock();
-	std::string strJson = parseUtil.readFileIntoString(strFileName.c_str());
-	//strJson = changePersonId(strJson, strPid);
-	testLock.unlock();
+	//testLock.lock();
+	//std::string strJson = parseUtil.readFileIntoString(strFileName.c_str());
+	////strJson = changePersonId(strJson, strPid);
+	//testLock.unlock();
 
-	std::string strRlt;
-	int iRlt = redis.set(strKey, strJson, strRlt);
-	
-	insertCnt++;
-	if (iRlt == 0)
-		succCnt++;
-	else
-		failCnt++;
+	//std::string strRlt;
+	//int iRlt = redis.set(strKey, strJson, strRlt);
+	//
+	//insertCnt++;
+	//if (iRlt == 0)
+	//	succCnt++;
+	//else
+	//	failCnt++;
 
-	//std::cout << "[" << strKey << "]" << strRlt; 
+	////std::cout << "[" << strKey << "]" << strRlt; 
 
-	if(insertCnt % 100 == 0)
-	{
-		logInfo << "strRlt = [" << strKey << "]" << strRlt <<
-			",succCnt = " << succCnt << ", failCnt = " << failCnt << std::endl;
-		setLog(LOG_DEBUG, logInfo);
-	}
+	//if(insertCnt % 100 == 0)
+	//{
+	//	logInfo << "strRlt = [" << strKey << "]" << strRlt <<
+	//		",succCnt = " << succCnt << ", failCnt = " << failCnt << std::endl;
+	//	setLog(LOG_DEBUG, logInfo);
+	//}
 }
