@@ -219,8 +219,8 @@ void* multiThread(void *args)
 		{
 			std::string strKey = strPid + *iter;
 			std::string strFileName = std::string(HEALTHDATAFILE) + std::string("\\") + *iter;
-			parseTest(strFileName, strKey, *redis);
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			parseTest(strFileName, "HEALT", *redis);
+			//std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 	}
 	return nullptr;
@@ -257,32 +257,32 @@ int failCnt = 0;
 int insertCnt = 0;
 void parseTest(std::string strFileName, std::string strKey, CCacheUtils & redis)
 {
-	//CParseHealthData parseUtil;
-	//std::stringstream ss;
-	//std::string strPid;
-	//ss << std::this_thread::get_id();
-	//ss >> strPid;
+	CParseHealthData parseUtil;
+	std::stringstream ss;
+	std::string strPid;
+	ss << std::this_thread::get_id();
+	ss >> strPid;
 
-	//testLock.lock();
-	//std::string strJson = parseUtil.readFileIntoString(strFileName.c_str());
-	////strJson = changePersonId(strJson, strPid);
-	//testLock.unlock();
+	testLock.lock();
+	std::string strJson = parseUtil.readFileIntoString(strFileName.c_str());
+	//strJson = changePersonId(strJson, strPid);
+	testLock.unlock();
 
-	//std::string strRlt;
-	//int iRlt = redis.set(strKey, strJson, strRlt);
-	//
-	//insertCnt++;
-	//if (iRlt == 0)
-	//	succCnt++;
-	//else
-	//	failCnt++;
+	std::string strRlt;
+	int iRlt = redis.set(strKey, strJson, strRlt);
+	
+	insertCnt++;
+	if (iRlt == 0)
+		succCnt++;
+	else
+		failCnt++;
 
-	////std::cout << "[" << strKey << "]" << strRlt; 
+	//std::cout << "[" << strKey << "]" << strRlt; 
 
-	//if(insertCnt % 100 == 0)
-	//{
-	//	logInfo << "strRlt = [" << strKey << "]" << strRlt <<
-	//		",succCnt = " << succCnt << ", failCnt = " << failCnt << std::endl;
-	//	setLog(LOG_DEBUG, logInfo);
-	//}
+	if(insertCnt % 100 == 0)
+	{
+		logInfo << "strRlt = [" << strKey << "]" << strRlt <<
+			",succCnt = " << succCnt << ", failCnt = " << failCnt << std::endl;
+		setLog(LOG_DEBUG, logInfo);
+	}
 }
