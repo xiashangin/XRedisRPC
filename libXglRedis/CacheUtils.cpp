@@ -7,6 +7,8 @@ CCacheUtils::CCacheUtils(const std::string & strClientId)
 	m_redisUtil = new CRedis_Utils(strClientId);
 	if (g_ECGLogger == nullptr)
 		g_ECGLogger = CMyLogger::getInstance();
+	//if (g_pLogger == NULL)
+	//	InitialLog();
 }
 
 
@@ -101,9 +103,6 @@ void CCacheUtils::log(const int iLogType, const std::string & strLog)
 	case LOG_INFO:
 		_INFOLOG(strLog.c_str());
 		break;
-	case LOG_TRACE:
-		_TRACELOG(strLog.c_str());
-		break;
 	case LOG_DEBUG:
 		_DEBUGLOG(strLog.c_str());
 		break;
@@ -113,12 +112,37 @@ void CCacheUtils::log(const int iLogType, const std::string & strLog)
 	case LOG_ERROR:
 		_ERRORLOG(strLog.c_str());
 		break;
-	case LOG_FATAL:
-		_FATALLOG(strLog.c_str());
-		break;
 	default:
 		_DEBUGLOG(strLog.c_str());
 		break;
 	}
+}
+
+void CCacheUtils::log0(const int iLogType, const char * lpFormatText, ...)
+{
+	if (g_ECGLogger == nullptr)
+		g_ECGLogger = CMyLogger::getInstance();
+	va_list argList;
+	va_start(argList, lpFormatText);
+
+	switch (iLogType)
+	{
+	case LOG_INFO:
+		MY_Log_Variable_Num(LOGL_INFOR, __FUNCTION__, lpFormatText, argList);
+		break;
+	case LOG_DEBUG:
+		MY_Log_Variable_Num(LOGL_DEBUG, __FUNCTION__, lpFormatText, argList);
+		break;
+	case LOG_WARN:
+		MY_Log_Variable_Num(LOGL_WARN, __FUNCTION__, lpFormatText, argList);
+		break;
+	case LOG_ERROR:
+		MY_Log_Variable_Num(LOGL_ERROR, __FUNCTION__, lpFormatText, argList);
+		break;
+	default:
+		MY_Log_Variable_Num(LOGL_DEBUG, __FUNCTION__, lpFormatText, argList);
+		break;
+	}
+	va_end(argList);
 }
 

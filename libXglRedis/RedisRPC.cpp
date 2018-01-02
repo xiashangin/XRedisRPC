@@ -42,9 +42,13 @@ bool CRedisRPC::connect(const char* ip, int port)
 	if ((NULL == m_redisContext) || (m_redisContext->err))
 	{
 		if (m_redisContext)
+		{
 			_ERRORLOG("connect error:" << m_redisContext->errstr);
+		}
 		else
+		{
 			_ERRORLOG("connect error: can't allocate redis context.");
+		}
 		return false;
 	}
 	return true;
@@ -331,9 +335,13 @@ void* CRedisRPC::thTimeout(void *arg)
 	if ((NULL == context) || (context->err))
 	{
 		if (context)
+		{
 			_WARNLOG("connect error:" << context->errstr);
+		}
 		else
+		{
 			_WARNLOG("connect error: can't allocate redis context.");
+		}
 		return nullptr;
 	}
 	char sRlt[256];

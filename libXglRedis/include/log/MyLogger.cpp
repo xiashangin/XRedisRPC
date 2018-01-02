@@ -1,29 +1,38 @@
 #include "MyLogger.h"
-
-CMyLogger *CMyLogger::my_logger = NULL;
+CMyLogger *CMyLogger::m_myLogger = NULL;
 
 CMyLogger::CMyLogger()
 {
-	log4cplus::initialize();
-	PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(MY_LOG__FILE_PATH));
-	logger = Logger::getRoot();
+	//log4cplus::initialize();
+	//PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(MY_LOG__FILE_PATH));
+	//logger = Logger::getRoot();
+	if(g_pLogger == NULL)
+		InitialLog();
+	m_globalLogOss = new std::ostringstream;
 }
 
 
 CMyLogger * CMyLogger::getInstance()
 {
-	if (my_logger == NULL)
+	if (m_myLogger == NULL)
 	{
-		my_logger = new CMyLogger();
+		m_myLogger = new CMyLogger();
 	}
-	return my_logger;
+	return m_myLogger;
 }
 
 CMyLogger::~CMyLogger()
 {
-	if (my_logger)
+	if (m_myLogger)
 	{
-		delete my_logger;
-		my_logger = nullptr;
+		delete m_myLogger;
+		m_myLogger = nullptr;
+	}
+	if (g_pLogger != NULL)
+		DeleteAndCloseLog();
+	if(m_globalLogOss != nullptr)
+	{
+		delete m_globalLogOss;
+		m_globalLogOss = nullptr;
 	}
 }

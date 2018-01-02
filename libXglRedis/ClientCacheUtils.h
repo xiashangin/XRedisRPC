@@ -6,12 +6,11 @@
 
 
 //日志类型
-#define LOG_INFO		0
-#define LOG_TRACE		1
-#define LOG_DEBUG		2
-#define LOG_WARN		3
-#define LOG_ERROR		4
-#define	LOG_FATAL		5
+#define LOG_INFO	0
+#define LOG_DEBUG	1
+#define LOG_WARN	2
+#define LOG_ERROR	3
+
 
 //状态码
 #define REDIS_TIMEOUT			100		//业务模块处理超时
@@ -99,7 +98,14 @@ public:
 	int pull(const std::string & strClientId, const std::string & strInKey, pullCallback cb);	//pull list
 	bool unpull(const std::string & strClientId, const std::string & strInKey);					//unpull list, like unsubs
 
+	/**日志接口，ilogType定义如下：
+	LOG_INFO		0		//普通信息
+	LOG_DEBUG		1		//调试信息
+	LOG_WARN		2		//警告信息
+	LOG_ERROR		3		//错误信息
+	**/
 	static void log(const int iLogType, const std::string & strLog);
+	static void log0(const int iLogType, const char * lpFormatText, ...);
 protected:
 	void * m_redisUtil;
 };

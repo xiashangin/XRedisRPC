@@ -53,6 +53,9 @@
     <ClCompile Include="ClientCacheUtils.cpp">
       <Filter>资源文件</Filter>
     </ClCompile>
+    <ClCompile Include="include\log\Logger.cpp">
+      <Filter>log</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\uuid\uuid4.h">
@@ -75,6 +78,9 @@
     </ClInclude>
     <ClInclude Include="ClientCacheUtils.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\log\Logger.h">
+      <Filter>log</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

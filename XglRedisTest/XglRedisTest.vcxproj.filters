@@ -16,6 +16,9 @@
     <Filter Include="json">
       <UniqueIdentifier>{93010e9d-44bc-4974-b023-9bd21e5db53f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Logger">
+      <UniqueIdentifier>{3484748c-495a-4478-a63d-2059b7f76619}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -32,6 +35,9 @@
     </ClCompile>
     <ClCompile Include="json\ParseHealthData.cpp">
       <Filter>json</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\Logger.cpp">
+      <Filter>Logger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -55,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="json\ParseHealthData.h">
       <Filter>json</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\Logger.h">
+      <Filter>Logger</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

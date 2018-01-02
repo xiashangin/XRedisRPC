@@ -103,7 +103,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\JsonCpp\include;C:\log4cplus\include;C:\hiredis\src;C:\hiredis\deps;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\JsonCpp\include;C:\hiredis\src;C:\hiredis\deps;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/D _CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="json\HealthDataBase.cpp" />
     <ClCompile Include="json\ParseHealthData.cpp" />
+    <ClCompile Include="Logger\Logger.cpp" />
     <ClCompile Include="RedisUtilsTest.h" />
     <ClCompile Include="XglCacheTest.cpp" />
   </ItemGroup>
@@ -173,6 +174,7 @@
     <ClInclude Include="json\healthData.h" />
     <ClInclude Include="json\HealthDataBase.h" />
     <ClInclude Include="json\ParseHealthData.h" />
+    <ClInclude Include="Logger\Logger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

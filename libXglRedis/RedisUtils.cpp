@@ -18,6 +18,8 @@ CRedis_Utils::~CRedis_Utils()
 
 bool CRedis_Utils::connect(const std::string & strIp, int port, bool isSubs)
 {
+	//DEBUGLOG("connect to redis server ip = " << this->m_strIp.c_str() << ", port = "
+	//	<< this->m_iPort << ", isSubs = " << this->m_bNeedSubs);
 	if(m_bIsConnected) 
 	{
 		_DEBUGLOG("redis 服务已经连接成功，重复连接... ip = " << strIp.c_str() 
@@ -97,13 +99,17 @@ void* CRedis_Utils::thAsyncSubsAll(void *arg)
 	//双重保障，如果第一次失败，进行第二次尝试。
 	int iRet = redisAsyncCommand(self->m_pRedisAsyncContext, subsAllCallback, self, cmd.c_str()/*"PSUBSCRIBE __keyspace@0__:*"*/);
 	if(iRet == REDIS_OK)
+	{ 
 		_DEBUGLOG("subscribe redis keyspace notification success!!! cmd = " << cmd.c_str());
+	}
 	else
 	{
 		_WARNLOG("subscribe redis keyspace notification failed!!! try again!!! cmd = " << cmd.c_str());
 		iRet = redisAsyncCommand(self->m_pRedisAsyncContext, subsAllCallback, self, cmd.c_str());
 		if (iRet == REDIS_OK)
+		{
 			_DEBUGLOG("subscribe redis keyspace notification success!!! cmd = " << cmd.c_str());
+		}
 		else
 		{
 			_ERRORLOG("subscribe redis keyspace notification failed!!!");
@@ -622,9 +628,13 @@ bool CRedis_Utils::_connect(const std::string & strIp, int port)
 	if ((NULL == m_pRedisContext) || (m_pRedisContext->err))
 	{
 		if (m_pRedisContext)
+		{
 			_ERRORLOG("connect error:" << m_pRedisContext->errstr);
+		}
 		else
+		{
 			_ERRORLOG("connect error: can't allocate redis context.");
+		}
 		return false;
 	}
 	m_bIsConnected = true;
