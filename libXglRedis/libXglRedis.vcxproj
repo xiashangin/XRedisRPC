@@ -92,7 +92,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\log4cplus\include;C:\hiredis\deps;C:\hiredis\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\hiredis\deps;C:\hiredis\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/D _CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -101,10 +101,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>hiredis.lib;Win32_Interop.lib;log4cplusD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>hiredis.lib;Win32_Interop.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>C:\log4cplus\lib;C:\hiredis\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\hiredis\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -150,6 +150,7 @@
     <ClCompile Include="CacheUtils.cpp" />
     <ClCompile Include="ClientCacheUtils.cpp" />
     <ClCompile Include="CommonTools.cpp" />
+    <ClCompile Include="include\log\Logger.cpp" />
     <ClCompile Include="include\log\MyLogger.cpp" />
     <ClCompile Include="include\redis_ae\adlist.c" />
     <ClCompile Include="include\redis_ae\ae.c" />
@@ -162,6 +163,7 @@
     <ClInclude Include="CacheUtils.h" />
     <ClInclude Include="ClientCacheUtils.h" />
     <ClInclude Include="CommonTools.h" />
+    <ClInclude Include="include\log\Logger.h" />
     <ClInclude Include="include\log\MyLogger.h" />
     <ClInclude Include="include\uuid\uuid4.h" />
     <ClInclude Include="RedisRPC.h" />

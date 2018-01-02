@@ -6,12 +6,11 @@
 #include <string>
 
 //日志类型
-#define LOG_INFO		0
-#define LOG_TRACE		1
-#define LOG_DEBUG		2
-#define LOG_WARN		3
-#define LOG_ERROR		4
-#define	LOG_FATAL		5
+#define LOG_INFO	0
+#define LOG_DEBUG	1
+#define LOG_WARN	2
+#define LOG_ERROR	3
+
 
 //状态码
 #define REDIS_TIMEOUT			100		//业务模块处理超时
@@ -118,26 +117,13 @@ public:
 	int notifyRlt(const std::string & strInKey, const std::string & strInValue);	//通知客户端处理完成
 
 	/**日志接口，ilogType定义如下：
-	LOG_INFO		0
-	LOG_TRACE		1
-	LOG_DEBUG		2
-	LOG_WARN		3
-	LOG_ERROR		4
-	LOG_FATAL		5
-
-	一个使用例子：
-	std::ostringstream logInfo;
-	void setLog(int iLogType, std::ostringstream & strLogInfo)
-	{
-	CClientCacheUtils::log(iLogType, strLogInfo.str());
-	strLogInfo.str("");
-	}
-
-	std::string result = "log test...";
-	logInfo << "log test, result = " << result;
-	setLog(LOG_DEBUG, logInfo.str());
+	LOG_INFO		0		//普通信息
+	LOG_DEBUG		1		//调试信息
+	LOG_WARN		2		//警告信息
+	LOG_ERROR		3		//错误信息
 	**/
 	static void log(const int iLogType, const std::string & strLog);
+	static void log0(const int iLogType, const char * lpFormatText, ...);
 protected:
 	CCacheUtils(const std::string & strClientId);
 	void * m_redisUtil;

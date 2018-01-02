@@ -23,12 +23,33 @@ extern "C"
 #include <hiredis/adapters/libevent.h>
 #endif
 
-#define _INFOLOG(inf) LOG4CPLUS_INFO(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
-#define _TRACELOG(inf) LOG4CPLUS_TRACE(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
-#define _DEBUGLOG(inf) LOG4CPLUS_DEBUG(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
-#define _WARNLOG(inf) LOG4CPLUS_WARN(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
-#define _ERRORLOG(inf) LOG4CPLUS_ERROR(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
-#define _FATALLOG(inf) LOG4CPLUS_FATAL(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+
+#define _INFOLOG(inf) \
+				*g_ECGLogger->m_globalLogOss << inf;\
+				MY_Log0(LOGL_INFOR, __FUNCTION__, g_ECGLogger->m_globalLogOss->str().c_str());\
+				g_ECGLogger->m_globalLogOss->str("");
+
+#define _DEBUGLOG(inf) \
+				*g_ECGLogger->m_globalLogOss << inf;\
+				MY_Log0(LOGL_DEBUG, __FUNCTION__, g_ECGLogger->m_globalLogOss->str().c_str());\
+				g_ECGLogger->m_globalLogOss->str("");
+
+#define _WARNLOG(inf) \
+				*g_ECGLogger->m_globalLogOss << inf;\
+				MY_Log0(LOGL_WARN, __FUNCTION__, g_ECGLogger->m_globalLogOss->str().c_str());\
+				g_ECGLogger->m_globalLogOss->str("");
+
+#define _ERRORLOG(inf) \
+				*g_ECGLogger->m_globalLogOss << inf;\
+				MY_Log0(LOGL_ERROR, __FUNCTION__, g_ECGLogger->m_globalLogOss->str().c_str());\
+				g_ECGLogger->m_globalLogOss->str("");
+
+//#define _INFOLOG(inf) LOG4CPLUS_INFO(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+//#define _TRACELOG(inf) LOG4CPLUS_TRACE(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+//#define _DEBUGLOG(inf) LOG4CPLUS_DEBUG(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+//#define _WARNLOG(inf) LOG4CPLUS_WARN(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+//#define _ERRORLOG(inf) LOG4CPLUS_ERROR(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
+//#define _FATALLOG(inf) LOG4CPLUS_FATAL(g_ECGLogger->logger, "[" << __FUNCTION__ << "] " << inf)
 
 #define REDIS_BUF_SIZE 1024 * 2
 
