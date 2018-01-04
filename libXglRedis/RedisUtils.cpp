@@ -703,6 +703,9 @@ int CRedis_Utils::updateReqHB(const std::string & strInKey, bool bType)
 				if ((time(nullptr) - atoi(strQueueLen.c_str())) > GET_WAITTIMEOUT / 1000)		//处理余留请求
 				{
 					strQueueLen.clear();
+					if (!sendCmd(strSetHBCmd, strQueueLen))
+						sendCmd(strSetHBCmd, strQueueLen);
+					strQueueLen.clear();
 					for (int i = 0; i < iQueueLen - 1; ++i)
 					{
 						if (m_mapSubsKeys.size() > 0)			//订阅
@@ -721,7 +724,7 @@ int CRedis_Utils::updateReqHB(const std::string & strInKey, bool bType)
 							}
 						}
 					}
-					iQueueLen = 0;
+					//iQueueLen = 0;
 				}
 			}
 			if (iQueueLen > 1)			//更新此请求最近处理的时间
