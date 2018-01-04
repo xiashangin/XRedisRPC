@@ -58,6 +58,7 @@ extern "C"
 #define R_SET		"SET"				//SET key value
 #define R_PUSH		"LPUSH"				//SET key value
 #define R_POP		"RPOP"				//RPOP key
+#define R_LLEN		"LLEN"				//LLEN key
 #define R_UNSUBS	"UNSUBSCRIBE"		//UNSUBSCRIBE channel
 #define R_SUBS		"SUBSCRIBE"			//SUBSCRIBE channel
 #define R_PSUBS		"PSUBSCRIBE"		//PSUBSCRIBE pattern
@@ -93,6 +94,7 @@ extern "C"
 #define REDIS_SUBS_OFF			107		//未开启redis键空间通知功能
 #define REDIS_REQ_SYNC_FAIL		108		//请求同步失败
 #define	REDIS_KEY_NOT_EXIST		109		//get或pop的key不存在
+#define REDIS_SERVICE_BUSY		110		//业务模块繁忙
 
 typedef std::map<std::string, std::string>		mapReqchnl;	//getkey-->requestChnl
 typedef std::map<std::string, std::string>		mapHBchnl;	//getkey-->HeartBeatChnl

@@ -219,8 +219,25 @@ int CRedis_Utils::set(const std::string & strInKey, const std::string & strInVal
 	m_setLock.lock();
 	bool bRlt = false;
 	std::string new_key = genNewKey(strInKey);
-	std::string cmd = std::string(R_SET) + COMMAND_SPLIT
-		+ new_key + COMMAND_SPLIT + strInValue;
+	std::string cmd = std::string(R_PUSH) + COMMAND_SPLIT
+		+ new_key + SET_KEY_SUFFIX + COMMAND_SPLIT + strInValue;
+
+	//处理过时任务
+	//std::string getHBCmd = std::string(R_GET) + std::string(" ")
+	//	+ new_key + SET_KEY_SUFFIX + SET_KEY_TIMESTAMP;
+	//std::string strTimestamp = "";
+	//sendCmd(cmd, strTimestamp);
+	//if((time(nullptr) - atoi(strTimestamp.c_str())) > GET_WAITTIMEOUT)
+
+
+	int iQueueLen = updateReqHB(new_key + SET_KEY_SUFFIX, true);
+	if (iQueueLen >= SETQUEUEMAXSIZE)			//待处理任务过多
+	{
+		strOutResult = "service is busy...";
+		m_setLock.unlock();
+		return REDIS_SERVICE_BUSY;
+	}
+
 
 	//_DEBUGLOG("set cmd = " << cmd.c_str());
 	bRlt = sendCmd(cmd, strOutResult);
@@ -641,6 +658,91 @@ bool CRedis_Utils::_connect(const std::string & strIp, int port)
 	return true;
 }
 
+int CRedis_Utils::updateReqHB(const std::string & strInKey, bool bType)
+{
+	std::string strSetHBCmd = std::string(R_SET) + COMMAND_SPLIT
+		+ strInKey + SET_KEY_TIMESTAMP
+		+ COMMAND_SPLIT + int2str(time(nullptr));
+	std::string strDelHBCmd = std::string(R_DEL) + std::string(" ") + strInKey + SET_KEY_TIMESTAMP;
+	std::string strGetHBCmd = std::string(R_GET) + std::string(" ") + strInKey + SET_KEY_TIMESTAMP;
+	std::string lenCmd = std::string(R_LLEN) + std::string(" ") + strInKey;
+	std::string getCmd = std::string(R_POP) + std::string(" ") + strInKey;
+
+	std::string strQueueLen;
+	int iQueueLen;
+	bool bRlt = sendCmd(lenCmd, strQueueLen);
+	if (bRlt)
+	{
+		iQueueLen = atoi(strQueueLen.c_str());
+		if (bType)
+		{
+			if (iQueueLen <= 0)			//更新此请求最近处理的时间
+			{
+				strQueueLen.clear();
+				if (!sendCmd(strSetHBCmd, strQueueLen))
+					sendCmd(strSetHBCmd, strQueueLen);
+			}
+			else
+			{
+				strQueueLen.clear();
+				if (!sendCmd(strGetHBCmd, strQueueLen))
+					sendCmd(strGetHBCmd, strQueueLen);
+				if ((time(nullptr) - atoi(strQueueLen.c_str())) > GET_WAITTIMEOUT / 1000)
+				{
+					iQueueLen = SETQUEUEMAXSIZE - 1;
+				}
+			}
+		}
+		else
+		{
+			if(iQueueLen > 0)
+			{
+				strQueueLen.clear();
+				if (!sendCmd(strGetHBCmd, strQueueLen))
+					sendCmd(strGetHBCmd, strQueueLen);
+				if ((time(nullptr) - atoi(strQueueLen.c_str())) > GET_WAITTIMEOUT / 1000)		//处理余留请求
+				{
+					strQueueLen.clear();
+					for (int i = 0; i < iQueueLen - 1; ++i)
+					{
+						if (m_mapSubsKeys.size() > 0)			//订阅
+						{
+							mapSubsCB::iterator it_subs = m_mapSubsKeys.begin();
+							for (; it_subs != m_mapSubsKeys.end(); ++it_subs)
+							{
+								if (keyMatch(strInKey, it_subs->first))
+								{
+									std::string sRlt;
+									std::string popCmd = R_POP + std::string(" ") + strInKey;
+									std::string old_key = getOldKey(strInKey);
+									if (sendCmd(popCmd, sRlt))
+										it_subs->second(old_key.substr(0, old_key.length() - strlen(SET_KEY_SUFFIX)), sRlt);
+								}
+							}
+						}
+					}
+					iQueueLen = 0;
+				}
+			}
+			if (iQueueLen > 1)			//更新此请求最近处理的时间
+			{
+				strQueueLen.clear();
+				if (!sendCmd(strSetHBCmd, strQueueLen))
+					sendCmd(strSetHBCmd, strQueueLen);
+			}
+			else						//请求处理完成
+			{
+				strQueueLen.clear();
+				if (!sendCmd(strDelHBCmd, strQueueLen))
+					sendCmd(strDelHBCmd, strQueueLen);
+			}
+		}
+	}
+	else
+		iQueueLen = SETQUEUEMAXSIZE;
+	return iQueueLen;
+}
+
 std::string CRedis_Utils::genNewKey(const std::string & old_key)
 {
 	return m_strClientId + old_key;
@@ -919,14 +1021,14 @@ void CRedis_Utils::subsAllCallback(redisAsyncContext *c, void *r, void *data)
 	redisReply *reply = (redisReply *)r;
 	if (reply == NULL) return;
 	if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
-		//_DEBUGLOG("Received[%s " << self->m_strIp.c_str() << "] channel" 
-		//	<< reply->element[1]->str << ": " << reply->element[2]->integer);
+		_DEBUGLOG("Received[%s " << self->m_strIp.c_str() << "] channel" 
+			<< reply->element[1]->str << ": " << reply->element[2]->integer);
 	}
 	else if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 4) {
 		std::string key = split(reply->element[2]->str, "__:")[1];
-		//_DEBUGLOG("Received[ " << self->m_strIp.c_str() << "] channel"
-		//	<< reply->element[1]->str << " -- " << key.c_str()
-		//	<< " : " << reply->element[3]->str);
+		_DEBUGLOG("Received[ " << self->m_strIp.c_str() << "] channel"
+			<< reply->element[1]->str << " -- " << key.c_str()
+			<< " : " << reply->element[3]->str);
 		self->callSubsCB(key, reply->element[3]->str);
 	}
 }
@@ -969,13 +1071,18 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 			if (keyMatch(strInKey, it_subs->first))
 			{
 				//将键和值都返回给上层，value长度为0表示键被del或者get rpop失败
-				if (strcmp(strInKeyOp.c_str(), "set") == 0)
+				if (strcmp(strInKeyOp.c_str(), "lpush") == 0 && strInKey.find(SET_KEY_SUFFIX) != std::string::npos)
 				{
-					if (sendCmd(getCmd, sRlt))
-						it_subs->second(old_key, sRlt);
+					updateReqHB(strInKey, false);		//更新处理时间
+
+					std::string lenCmd = std::string(R_LLEN) + std::string(" ") + strInKey + SET_KEY_SUFFIX;
+					std::string strQueueLen;
+					
+					if (sendCmd(popCmd, sRlt))
+						it_subs->second(old_key.substr(0, old_key.length() - strlen(SET_KEY_SUFFIX)), sRlt);
 				}
-				else if (strcmp(strInKeyOp.c_str(), "del") == 0)
-					it_subs->second(old_key, "");
+				//else if (strcmp(strInKeyOp.c_str(), "del") == 0 && strInKey.find(SET_KEY_SUFFIX) != std::string::npos)
+				//	it_subs->second(old_key, "");
 			}
 		}
 	}
@@ -989,13 +1096,13 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 			//将键和值都返回给上层，value长度为0表示键被del或者get rpop失败
 			if (keyMatch(std::string(strInKey), it_pull->first))
 			{
-				if (strcmp(strInKeyOp.c_str(), "lpush") == 0)
+				if (strcmp(strInKeyOp.c_str(), "lpush") == 0 && strInKey.find(SET_KEY_SUFFIX) == std::string::npos)
 				{
 					if (sendCmd(popCmd, sRlt))
 						it_pull->second(old_key, sRlt);
 				}
-				else if (strcmp(strInKeyOp.c_str(), "del") == 0)
-					it_pull->second(old_key, "");
+				//else if (strcmp(strInKeyOp.c_str(), "del") == 0 && strInKey.find(SET_KEY_SUFFIX) == std::string::npos)
+				//	it_pull->second(old_key, "");
 			}
 			
 		}

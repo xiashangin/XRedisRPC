@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="json">
-      <UniqueIdentifier>{93010e9d-44bc-4974-b023-9bd21e5db53f}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -26,12 +23,6 @@
     </ClCompile>
     <ClCompile Include="RedisUtilsTest.h">
       <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="json\HealthDataBase.cpp">
-      <Filter>json</Filter>
-    </ClCompile>
-    <ClCompile Include="json\ParseHealthData.cpp">
-      <Filter>json</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,15 +37,6 @@
     </ClInclude>
     <ClInclude Include="ClientCacheUtils.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="json\healthData.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\HealthDataBase.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\ParseHealthData.h">
-      <Filter>json</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

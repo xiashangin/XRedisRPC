@@ -122,167 +122,167 @@ void getCBA(const std::string & key, const std::string & value)
 }
 
 
-#include "json/ParseHealthData.h"
-#define HEALTHDATAFILE	"C:\\workspace\\libXglRedis\\XglRedisTest\\healthData"
-#include <windows.h>
-#include <stdio.h>
-#include <string.h>
-#include <iostream>
-#include <chrono>
-#define LEN 1024
-// 深度优先递归遍历目录中所有的文件
-//将单字节char*转化为宽字节wchar_t*  
-wchar_t* AnsiToUnicode(const char* szStr)
-{
-	int nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
-	if (nLen == 0)
-	{
-		return NULL;
-	}
-	wchar_t* pResult = new wchar_t[nLen];
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, pResult, nLen);
-	return pResult;
-}
-
-//将宽字节wchar_t*转化为单字节char*  
-char* UnicodeToAnsi(const wchar_t* szStr)
-{
-	int nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
-	if (nLen == 0)
-	{
-		return NULL;
-	}
-	char* pResult = new char[nLen];
-	WideCharToMultiByte(CP_ACP, 0, szStr, -1, pResult, nLen, NULL, NULL);
-	return pResult;
-}
-BOOL DirectoryList(LPCSTR Path, std::vector<std::string> & vecFile)
-{
-	WIN32_FIND_DATA FindData;
-	HANDLE hError;
-	int FileCount = 0;
-	char FilePathName[LEN];
-	// 构造路径
-	//char FullPathName[LEN];
-	strcpy(FilePathName, Path);
-	strcat(FilePathName, "\\*.*");
-	hError = FindFirstFile(AnsiToUnicode(FilePathName), &FindData);
-	if (hError == INVALID_HANDLE_VALUE)
-	{
-		printf("搜索失败!");
-		return 0;
-	}
-	while (::FindNextFile(hError, &FindData))
-	{
-		// 过虑.和..
-		if (strcmp(UnicodeToAnsi(FindData.cFileName), ".") == 0
-			|| strcmp(UnicodeToAnsi(FindData.cFileName), "..") == 0)
-		{
-			continue;
-		}
-		//logInfo << UnicodeToAnsi(FindData.cFileName);
-		//setLog(LOG_DEBUG, logInfo);
-		vecFile.push_back(UnicodeToAnsi(FindData.cFileName));
-		//// 构造完整路径
-		//wsprintf(AnsiToUnicode(FullPathName), AnsiToUnicode("%s\\%s"), Path, FindData.cFileName);
-		//FileCount++;
-		//// 输出本级的文件
-		//printf("\n%d %s ", FileCount, FullPathName);
-
-		//if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		//{
-		//	printf("<Dir>");
-		//	DirectoryList(FullPathName);
-		//}
-	}
-	return true;
-}
-#include <mutex>
-std::mutex testLock;
-void parseTest(std::string strFileName, std::string strKey, CCacheUtils & redis);
-void* multiThread(void *args)
-{
-	CCacheUtils *redis = (CCacheUtils *)args;
-
-	std::stringstream ss;
-	std::string strPid;
-	ss << std::this_thread::get_id();
-	ss >> strPid;
-	testLock.lock();
-	std::vector<std::string> vecFile;
-	DirectoryList(HEALTHDATAFILE, vecFile);
-	testLock.unlock();
-	while (1)
-	{
-		std::vector<std::string>::iterator iter = vecFile.begin();
-		for (; iter != vecFile.end(); ++iter)
-		{
-			std::string strKey = strPid + *iter;
-			std::string strFileName = std::string(HEALTHDATAFILE) + std::string("\\") + *iter;
-			parseTest(strFileName, "HEALT", *redis);
-			//std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		}
-	}
-	return nullptr;
-}
-
-std::string changePersonId(const std::string & strJson, const std::string & strPersonId)
-{
-	Json::CharReaderBuilder rBuilder;
-	Json::CharReader* reader(rBuilder.newCharReader());
-	Json::Value jsonRoot;
-	JSONCPP_STRING errs;
-	const char* lpStrJson = strJson.c_str();
-	bool is_ok = reader->parse(lpStrJson, lpStrJson + strlen(lpStrJson), &jsonRoot, &errs);
-	if (!is_ok || errs.size() > 0) //从ifs中读取数据到jsonRoot
-	{
-		logInfo << "parse Json file failed!!! errstr = " << errs << std::endl;
-		setLog(LOG_DEBUG, logInfo);
-		return "";
-	}
-
-	jsonRoot[PERSON_ID] = strPersonId + strPersonId;
-	Json::StreamWriterBuilder wBuilder;
-	wBuilder.settings_["indentation"] = "";
-	std::unique_ptr<Json::StreamWriter> writer(wBuilder.newStreamWriter());
-
-	std::stringstream ss;
-	writer->write(jsonRoot, &ss);
-
-	return ss.str();
-}
-
-int succCnt = 0;
-int failCnt = 0;
-int insertCnt = 0;
-void parseTest(std::string strFileName, std::string strKey, CCacheUtils & redis)
-{
-	CParseHealthData parseUtil;
-	std::stringstream ss;
-	std::string strPid;
-	ss << std::this_thread::get_id();
-	ss >> strPid;
-
-	testLock.lock();
-	std::string strJson = parseUtil.readFileIntoString(strFileName.c_str());
-	//strJson = changePersonId(strJson, strPid);
-	testLock.unlock();
-
-	std::string strRlt;
-	int iRlt = redis.set(strKey, strJson, strRlt);
-	
-	insertCnt++;
-	if (iRlt == 0)
-		succCnt++;
-	else
-		failCnt++;
-
-	//std::cout << "[" << strKey << "]" << strRlt; 
-
-	if(insertCnt % 100 == 0)
-	{
-		logInfo << "strRlt = [" << strKey << "]" << strRlt <<
-			",succCnt = " << succCnt << ", failCnt = " << failCnt << std::endl;
-		setLog(LOG_DEBUG, logInfo);
-	}
-}
+//#include "json/ParseHealthData.h"
+//#define HEALTHDATAFILE	"C:\\workspace\\libXglRedis\\XglRedisTest\\healthData"
+//#include <windows.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <iostream>
+//#include <chrono>
+//#define LEN 1024
+//// 深度优先递归遍历目录中所有的文件
+////将单字节char*转化为宽字节wchar_t*  
+//wchar_t* AnsiToUnicode(const char* szStr)
+//{
+//	int nLen = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, NULL, 0);
+//	if (nLen == 0)
+//	{
+//		return NULL;
+//	}
+//	wchar_t* pResult = new wchar_t[nLen];
+//	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szStr, -1, pResult, nLen);
+//	return pResult;
+//}
+//
+////将宽字节wchar_t*转化为单字节char*  
+//char* UnicodeToAnsi(const wchar_t* szStr)
+//{
+//	int nLen = WideCharToMultiByte(CP_ACP, 0, szStr, -1, NULL, 0, NULL, NULL);
+//	if (nLen == 0)
+//	{
+//		return NULL;
+//	}
+//	char* pResult = new char[nLen];
+//	WideCharToMultiByte(CP_ACP, 0, szStr, -1, pResult, nLen, NULL, NULL);
+//	return pResult;
+//}
+//BOOL DirectoryList(LPCSTR Path, std::vector<std::string> & vecFile)
+//{
+//	WIN32_FIND_DATA FindData;
+//	HANDLE hError;
+//	int FileCount = 0;
+//	char FilePathName[LEN];
+//	// 构造路径
+//	//char FullPathName[LEN];
+//	strcpy(FilePathName, Path);
+//	strcat(FilePathName, "\\*.*");
+//	hError = FindFirstFile(AnsiToUnicode(FilePathName), &FindData);
+//	if (hError == INVALID_HANDLE_VALUE)
+//	{
+//		printf("搜索失败!");
+//		return 0;
+//	}
+//	while (::FindNextFile(hError, &FindData))
+//	{
+//		// 过虑.和..
+//		if (strcmp(UnicodeToAnsi(FindData.cFileName), ".") == 0
+//			|| strcmp(UnicodeToAnsi(FindData.cFileName), "..") == 0)
+//		{
+//			continue;
+//		}
+//		//logInfo << UnicodeToAnsi(FindData.cFileName);
+//		//setLog(LOG_DEBUG, logInfo);
+//		vecFile.push_back(UnicodeToAnsi(FindData.cFileName));
+//		//// 构造完整路径
+//		//wsprintf(AnsiToUnicode(FullPathName), AnsiToUnicode("%s\\%s"), Path, FindData.cFileName);
+//		//FileCount++;
+//		//// 输出本级的文件
+//		//printf("\n%d %s ", FileCount, FullPathName);
+//
+//		//if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+//		//{
+//		//	printf("<Dir>");
+//		//	DirectoryList(FullPathName);
+//		//}
+//	}
+//	return true;
+//}
+//#include <mutex>
+//std::mutex testLock;
+//void parseTest(std::string strFileName, std::string strKey, CCacheUtils & redis);
+//void* multiThread(void *args)
+//{
+//	CCacheUtils *redis = (CCacheUtils *)args;
+//
+//	std::stringstream ss;
+//	std::string strPid;
+//	ss << std::this_thread::get_id();
+//	ss >> strPid;
+//	testLock.lock();
+//	std::vector<std::string> vecFile;
+//	DirectoryList(HEALTHDATAFILE, vecFile);
+//	testLock.unlock();
+//	while (1)
+//	{
+//		std::vector<std::string>::iterator iter = vecFile.begin();
+//		for (; iter != vecFile.end(); ++iter)
+//		{
+//			std::string strKey = strPid + *iter;
+//			std::string strFileName = std::string(HEALTHDATAFILE) + std::string("\\") + *iter;
+//			parseTest(strFileName, "HEALT", *redis);
+//			//std::this_thread::sleep_for(std::chrono::milliseconds(200));
+//		}
+//	}
+//	return nullptr;
+//}
+//
+//std::string changePersonId(const std::string & strJson, const std::string & strPersonId)
+//{
+//	Json::CharReaderBuilder rBuilder;
+//	Json::CharReader* reader(rBuilder.newCharReader());
+//	Json::Value jsonRoot;
+//	JSONCPP_STRING errs;
+//	const char* lpStrJson = strJson.c_str();
+//	bool is_ok = reader->parse(lpStrJson, lpStrJson + strlen(lpStrJson), &jsonRoot, &errs);
+//	if (!is_ok || errs.size() > 0) //从ifs中读取数据到jsonRoot
+//	{
+//		logInfo << "parse Json file failed!!! errstr = " << errs << std::endl;
+//		setLog(LOG_DEBUG, logInfo);
+//		return "";
+//	}
+//
+//	jsonRoot[PERSON_ID] = strPersonId + strPersonId;
+//	Json::StreamWriterBuilder wBuilder;
+//	wBuilder.settings_["indentation"] = "";
+//	std::unique_ptr<Json::StreamWriter> writer(wBuilder.newStreamWriter());
+//
+//	std::stringstream ss;
+//	writer->write(jsonRoot, &ss);
+//
+//	return ss.str();
+//}
+//
+//int succCnt = 0;
+//int failCnt = 0;
+//int insertCnt = 0;
+//void parseTest(std::string strFileName, std::string strKey, CCacheUtils & redis)
+//{
+//	CParseHealthData parseUtil;
+//	std::stringstream ss;
+//	std::string strPid;
+//	ss << std::this_thread::get_id();
+//	ss >> strPid;
+//
+//	testLock.lock();
+//	std::string strJson = parseUtil.readFileIntoString(strFileName.c_str());
+//	//strJson = changePersonId(strJson, strPid);
+//	testLock.unlock();
+//
+//	std::string strRlt;
+//	int iRlt = redis.set(strKey, strJson, strRlt);
+//	
+//	insertCnt++;
+//	if (iRlt == 0)
+//		succCnt++;
+//	else
+//		failCnt++;
+//
+//	//std::cout << "[" << strKey << "]" << strRlt; 
+//
+//	if(insertCnt % 100 == 0)
+//	{
+//		logInfo << "strRlt = [" << strKey << "]" << strRlt <<
+//			",succCnt = " << succCnt << ", failCnt = " << failCnt << std::endl;
+//		setLog(LOG_DEBUG, logInfo);
+//	}
+//}

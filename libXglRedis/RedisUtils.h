@@ -4,6 +4,9 @@
 #include <functional>
 #define DEFAULT_CLIENTID		"__default__"
 #define COMMAND_SPLIT			"&&&_&&&"
+#define SET_KEY_SUFFIX			"__SETFLAG__"
+#define SET_KEY_TIMESTAMP		"LASTREQ+"
+#define SETQUEUEMAXSIZE			3
 
 typedef std::function<void(const std::string & , const std::string & )> subsCallback;
 typedef std::function<void(const std::string & , const std::string &)> pullCallback;
@@ -96,6 +99,7 @@ private:
 	
 	void close();
 	bool _connect(const std::string & strIp, int iPort);
+	int updateReqHB(const std::string & strInKey, bool bType);				//true:set请求，false:处理请求
 	//实现业务模块的数据隔离
 	std::string genNewKey(const std::string & lpStrOldKey);					//封装用户传入的key				
 	std::string getOldKey(const std::string & lpStrNewKey);					//获取客户的原始key

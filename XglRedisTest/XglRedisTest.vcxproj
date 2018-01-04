@@ -155,8 +155,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="json\HealthDataBase.cpp" />
-    <ClCompile Include="json\ParseHealthData.cpp" />
     <ClCompile Include="RedisUtilsTest.h" />
     <ClCompile Include="XglCacheTest.cpp" />
   </ItemGroup>
@@ -170,9 +168,6 @@
     <ClInclude Include="CacheUtilsTest.h" />
     <ClInclude Include="ClientCacheUtils.h" />
     <ClInclude Include="ClientCacheUtilsTest.h" />
-    <ClInclude Include="json\healthData.h" />
-    <ClInclude Include="json\HealthDataBase.h" />
-    <ClInclude Include="json\ParseHealthData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
