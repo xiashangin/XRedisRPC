@@ -18,8 +18,8 @@ void setLog(int iLogType, std::ostringstream & strLogInfo)
 	strLogInfo.str("");
 }
 
-#define REDISIP		"192.168.31.217"
-#define REDISPORT	6379
+#define REDISIP		"192.168.1.20"
+#define REDISPORT	6378
 
 void test_set(CCacheUtils & redis)
 {

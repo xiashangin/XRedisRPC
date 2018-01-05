@@ -724,7 +724,7 @@ int CRedis_Utils::updateReqHB(const std::string & strInKey, bool bType)
 							}
 						}
 					}
-					//iQueueLen = 0;
+					//iQueueLen = SETQUEUEMAXSIZE;
 				}
 			}
 			if (iQueueLen > 1)			//更新此请求最近处理的时间
@@ -1076,12 +1076,11 @@ void CRedis_Utils::callSubsCB(const std::string & strInKey, const std::string & 
 				//将键和值都返回给上层，value长度为0表示键被del或者get rpop失败
 				if (strcmp(strInKeyOp.c_str(), "lpush") == 0 && strInKey.find(SET_KEY_SUFFIX) != std::string::npos)
 				{
-					updateReqHB(strInKey, false);		//更新处理时间
-
 					std::string lenCmd = std::string(R_LLEN) + std::string(" ") + strInKey + SET_KEY_SUFFIX;
 					std::string strQueueLen;
 					
-					if (sendCmd(popCmd, sRlt))
+					updateReqHB(strInKey, false);		//更新处理时间
+					if (sendCmd(popCmd, sRlt) && sRlt.length() > 0)
 						it_subs->second(old_key.substr(0, old_key.length() - strlen(SET_KEY_SUFFIX)), sRlt);
 				}
 				//else if (strcmp(strInKeyOp.c_str(), "del") == 0 && strInKey.find(SET_KEY_SUFFIX) != std::string::npos)

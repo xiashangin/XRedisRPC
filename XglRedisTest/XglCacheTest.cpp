@@ -167,12 +167,12 @@ int main(int argc, char const *argv[])
 	});
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	std::string strRlt;
-	redis1->set("A", "888", strRlt);
-	redis1->set("A", "2", strRlt);
-	redis1->set("A", "3", strRlt);
-	redis1->set("A", "4", strRlt);
-	redis1->set("A", "5", strRlt);
-	redis1->set("A", "6", strRlt);
+	//redis1->set("A", "888", strRlt);
+	//redis1->set("A", "2", strRlt);
+	//redis1->set("A", "3", strRlt);
+	//redis1->set("A", "4", strRlt);
+	//redis1->set("A", "5", strRlt);
+	//redis1->set("A", "6", strRlt);
 
 	//const int THREADNUM = 10;
 	//std::vector<std::thread> thTestGroup;
